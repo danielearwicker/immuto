@@ -1,0 +1,29 @@
+{
+  "name": "immuto",
+  "version": "0.9.0",
+  "description": "Very strongly typed Redux adaptation for TypeScript",
+  "main": "built/index.js",
+  "typings": "built/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielearwicker/immuto.git"
+  },
+  "keywords": [
+    "redux",
+    "react",
+    "typescript"
+  ],
+  "author": "Daniel Earwicker <dan@earwicker.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/danielearwicker/immuto/issues"
+  },
+  "homepage": "https://github.com/danielearwicker/immuto#readme",
+  "dependencies": {
+    "immutable": "^3.8.1",
+    "redux": "^3.5.2"
+  }
+}
