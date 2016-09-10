@@ -1,140 +1,138 @@
 import { Map } from "immutable";
-import { createStore, Unsubscribe } from "redux"
+import { Unsubscribe, createStore } from "redux"
 
-export interface Action<Type, Payload> {
-    type: Type,
-    payload: Payload
+export interface Action<T extends string, P> {
+    readonly type: T,
+    readonly payload: P
 }
 
-export function action<State, Type, Payload>(
-    type: Type,
-    reduce: (state: State, payload: Payload) => State) {
+export function action<T extends string, P>(type: T, payload: P) {
+    return { type, payload };
+}
 
-    function create(payload: Payload) {
-        return { type: type, payload };
+export interface Reducer<S, A> {
+
+    /**
+     * Reduce function
+     */
+    (state: S, action: A): S;
+
+    /**
+     * Dummy member for use with typeof
+     */
+    actionType: A;
+
+    /**
+     * Returns an enhanced Reducer capable of reducing
+     * an additional action type
+     */
+    action<T extends string, P>(
+        type: T,
+        reduce: (state: S, payload: P) => S
+    ) : Reducer<S, A | Action<T, P>>
+
+    /**
+     * Creates a Redux store with extra type-safety
+     */
+    createStore(): Store<S, A>;
+}
+
+function isAction<T extends string>(
+    obj: any,
+    type: T
+): obj is Action<T, any> {
+    return obj && obj.type === type;
+}
+
+export function chain<S, RA, HT extends string, HP>(
+    headType: HT,
+    head: (state: S, payload: HP) => S,
+    rest: (state: S, action: RA) => S
+): Reducer<S, RA | Action<HT, HP>> {
+
+    type A = RA | Action<HT, HP>;
+
+    function reduce(state: S, action: A) {
+        if (isAction(action, headType)) {
+            return head(state, action.payload);
+        }
+
+        return rest(state, action);
     }
 
-    const meta = { type, reduce };
-    const result: typeof create & typeof meta = create as any;
-    result.type = type;
-    result.reduce = reduce;
+    return assign(reduce, {
 
-    return result;
+        actionType: undefined! as A,
+
+        action<T extends string, P>(
+            type: T,
+            newReduce: (state: S, payload: P) => S
+        ) : Reducer<S, Action<T, P> | A> {
+            return chain<S, A | RA, T, P>(type, newReduce, reduce);
+        },
+
+        createStore(): Store<S, A> {
+            return createStore(reduce);
+        }
+    });
 }
 
-export interface Store<State, ActionType> {
-    dispatch(action: ActionType): void;
-    getState(): State;
+export function reducer<S>(init: S) {
+    return {
+        action<T extends string, P>(
+            type: T,
+            reduce: (state: S, payload: P) => S
+        ) : Reducer<S, Action<T, P>> {
+            return chain<S, never, T, P>(type, reduce, s => s === undefined ? init : s);
+        }
+    };
+}
+
+export interface Store<S, A> {
+    dispatch(action: A): void;
+    getState(): S;
     subscribe(listener: () => void): Unsubscribe;
 }
 
-export interface Cursor<State, ActionType> {
-    (action: ActionType): void;
-    (): State;
+export interface Cursor<S, A> {
+    readonly value: S;
+    dispatch(action: A): Cursor<S, A>;
 }
 
-export function createStoreCursor<State, ActionType>(
-    store: Store<State, ActionType>
-): Cursor<State, ActionType> {
-
-    const dummyState = {} as State;
-
-    return (action?: ActionType) => {
-        if (action) {
+export function createStoreCursor<S, A>(
+    store: Store<S, A>
+): Cursor<S, A> {
+    return {
+        value: store.getState(),
+        dispatch(action) {
             store.dispatch(action);
-            return dummyState;
+            return createStoreCursor(store);
         }
-        return store.getState();
     };
 }
 
-export interface Reducer<State, Types extends Action<string, any>> {
-
-    (state: State, action: Types): State;
-
-    add<TypeName extends string, Payload>(action: {
-        type: TypeName,
-        reduce: (state: State, action: Payload) => State
-    }): Reducer<State, Types | Action<TypeName, Payload>>;
-
-    createStore(): Store<State, Types>;
-
-    readonly actionType: Types;
-    readonly cursorType: Cursor<State, Types>
-}
-
-export function reducer<State>(init: State) {
-
-    type ActionMap<State> = Map<string, (state: State, payload: any) => State>;
-
-    function combine<State, Types extends Action<string, any>>(
-        init: State,
-        map: ActionMap<State>
-    ): Reducer<State, Types> {
-
-        function reduce(state: State, action: Types) {
-            if (state === undefined) {
-                return init;
-            }
-
-            var handler = map.get(action.type as any);
-            if (!handler) {
-                throw new Error(`Unrecognised action: ${action.type}`);
-            }
-            return handler(state, action.payload);
-        }
-
-        function add<TypeName extends string, Payload>(action: {
-            type: TypeName,
-            reduce: (state: State, payload: Payload) => State
-        }) {
-            const type = action.type as string;
-            if (map.has(type)) {
-                throw new Error(`Duplicate action: ${type}`);
-            }
-
-            return combine<State, Types | Action<TypeName, Payload>>(
-                init, map.set(type, action.reduce));
-        };
-
-        function store() {
-            return createStore(reduce);
-        }
-
-        const meta = {
-            add,
-            createStore: store,
-            actionType: {} as Types,
-            cursorType: {} as Cursor<State, Types>
-        };
-
-        const result: typeof reduce & typeof meta = reduce as any;
-        result.add = add;
-        result.createStore = store;
-
-        return result;
-    }
-
-    return combine<State, never>(init, Map<any, any>());
-}
-
-export function defineCursor<ContainerState, ContainerActionType, Address, TargetState, TargetActionType>(
-    fetch: (container: ContainerState, address: Address) => TargetState,
-    update: (address: Address, action: TargetActionType) => ContainerActionType
+export function defineCursor<OS, OA, K, IS, IA>(
+    fetch: (outer: OS, key: K) => IS,
+    update: (key: K, action: IA) => OA
 ) {
-    const dummyState = {} as TargetState;
-
-    return (container: Cursor<ContainerState, ContainerActionType>,
-            address: Address, snapshot?: boolean): Cursor<TargetState, TargetActionType> => {
-
-        const snapshotValue = snapshot ? fetch(container(), address) : dummyState;
-
-        return (targetAction?: TargetActionType) => {
-            if (targetAction) {
-                container(update(address, targetAction));
-                return dummyState;
+    return (outer: Cursor<OS, OA>, key: K): Cursor<IS, IA> => {
+        return {
+            value: fetch(outer.value, key),
+            dispatch(innerAction: IA) {
+                return defineCursor(fetch, update)(
+                    outer.dispatch(update(key, innerAction)), key);
             }
-            return snapshot ? snapshotValue : fetch(container(), address);
         };
     };
+}
+
+function assign<T, S1, S2>(target: T, source1: S1, source2: S2): T & S1 & S2;
+function assign<T, S1>(target: T, source1: S1): T & S1;
+function assign<T>(target: T, ...sources: any[]): any {
+    for (const source of sources) {
+        for (const key of Object.keys(source)) {
+            (target as any)[key] = (source as any)[key];
+        }
+    }
+    return target;
 }

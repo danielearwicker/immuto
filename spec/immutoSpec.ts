@@ -1,78 +1,117 @@
-import { Action, Reducer, Store, action, reducer, defineCursor, createStoreCursor } from "../index";
+import { action, Reducer, Store, reducer, defineCursor, createStoreCursor } from "../index";
 import { List } from "immutable";
 
-export class Book {
-
-    constructor(
-        public readonly title: string,
-        public readonly price: number,
-        public readonly authors: List<string>) {
-    }
-
-    static readonly setTitle = action<Book, "SET_TITLE", string>(
-            "SET_TITLE", (book, title) => new Book(title, book.price, book.authors));
-
-    static readonly setPrice = action<Book, "SET_PRICE", number>(
-            "SET_PRICE", (book, price) => new Book(book.title, price, book.authors));
-
-    static readonly addAuthor = action<Book, "SET_AUTHOR", string>(
-            "SET_AUTHOR", (book, author) => new Book(book.title, book.price, book.authors.push(author)));
-
-    static readonly reduce = reducer<Book>(new Book("", 0, List<string>()))
-                            .add(Book.setTitle)
-                            .add(Book.setPrice)
-                            .add(Book.addAuthor);
+interface Book {
+    readonly title: string;
+    readonly price: number;
+    readonly authors: List<string>;
 }
 
-class Shelf {
+namespace Book {
 
-    constructor(
-        public readonly description: string,
-        public readonly books: List<Book>) {
-    }
+    export const empty: Book = {
+        title: "",
+        price: 0,
+        authors: List<string>()
+    };
 
-    static readonly setDescription = action<Shelf, "SET_DESCRIPTION", string>(
-            "SET_DESCRIPTION", (shelf, descr) => new Shelf(descr, shelf.books));
+    export const reduce = reducer(empty)
+        .action("SET_TITLE", (book: Book, title: string) => (
+            {
+                title,
+                price: book.price,
+                authors: book.authors
+            }
+        ))
+        .action("SET_PRICE", (book: Book, price: number) => (
+            {
+                title: book.title,
+                price,
+                authors: book.authors
+            }
+        ))
+        .action("ADD_AUTHOR", (book: Book, author: string) => (
+            {
+                title: book.title,
+                price: book.price,
+                authors: book.authors.push(author)
+            }
+        ));
 
-    static readonly addBook = action<Shelf, "ADD_BOOK", string>(
-            "ADD_BOOK", (shelf, title) => new Shelf(shelf.description, shelf.books.push(new Book(title, 0, List<string>()))));
+    export type Action = typeof reduce.actionType;
+}
 
-    static readonly updateBook = action<Shelf, "UPDATE_BOOK", [number, typeof Book.reduce.actionType]>(
-            "UPDATE_BOOK", (shelf, args) => new Shelf(shelf.description, shelf.books.update(args[0], b => Book.reduce(b, args[1]))));
+interface Shelf {
+    readonly description: string;
+    readonly books: List<Book>;
+}
 
-    static readonly reduce = reducer<Shelf>(new Shelf("", List<Book>()))
-                            .add(Shelf.setDescription)
-                            .add(Shelf.addBook)
-                            .add(Shelf.updateBook);
+namespace Shelf {
 
-    static readonly bookAt = defineCursor(
+    export const empty: Shelf = {
+        description: "",
+        books: List<Book>()
+    };
+
+    export const reduce = reducer(empty)
+        .action("SET_DESCRIPTION", (shelf: Shelf, description: string) => (
+            {
+                description,
+                books: shelf.books
+            }
+        ))
+        .action("ADD_BOOK", (shelf: Shelf, title: string) => (
+            {
+                description: shelf.description,
+                books: shelf.books.push({
+                    title,
+                    price: Book.empty.price,
+                    authors: Book.empty.authors
+                })
+            }
+        ))
+        .action("UPDATE_BOOK", (shelf: Shelf, {pos, bookAction}: { pos: number, bookAction: Book.Action }) => (
+            {
+                description:
+                shelf.description,
+                books: shelf.books.update(pos, b => Book.reduce(b, bookAction))
+            }
+        ));
+
+    export type Action = typeof reduce.actionType;
+
+    export const bookAt = defineCursor(
         (shelf: Shelf, pos: number) => shelf.books.get(pos),
-        (pos: number, bookAction: typeof Book.reduce.actionType) => Shelf.updateBook([pos, bookAction]));
+        (pos: number, bookAction: Book.Action) => action("UPDATE_BOOK", { pos, bookAction })
+    );
 }
 
-class Shop {
-    constructor(
-        public readonly name: string,
-        public readonly shelves: List<Shelf>) {
-    }
+interface Shop {
+    readonly name: string;
+    readonly shelves: List<Shelf>;
+}
 
-    static readonly setName = action<Shop, "SET_NAME", string>(
-            "SET_NAME", (shop, name) => new Shop(name, shop.shelves));
+namespace Shop {
 
-    static readonly addShelf = action<Shop, "ADD_SHELF", string>(
-            "ADD_SHELF", (shop, name) => new Shop(shop.name, shop.shelves.push(new Shelf(name, List<Book>()))));
+    export const empty: Shop = {
+        name: "",
+        shelves: List<Shelf>()
+    };
 
-    static readonly updateShelf = action<Shop, "UPDATE_SHELF", [number, typeof Shelf.reduce.actionType]>(
-            "UPDATE_SHELF", (shop, args) => new Shop(shop.name, shop.shelves.update(args[0], s => Shelf.reduce(s, args[1]))));
+    export const reduce = reducer(empty)
+        .action("SET_NAME", (shop: Shop, name: string) =>
+            ({ name, shelves: shop.shelves })
+        )
+        .action("ADD_SHELF", (shop: Shop, description: string) =>
+            ({ name: shop.name, shelves: shop.shelves.push({ description, books: Shelf.empty.books }) })
+        )
+        .action("UPDATE_SHELF", (shop: Shop, {pos, shelfAction}: { pos: number, shelfAction: Shelf.Action }) =>
+            ({ name: shop.name, shelves: shop.shelves.update(pos, s => Shelf.reduce(s, shelfAction)) })
+        );
 
-    static readonly reduce = reducer<Shop>(new Shop("", List<Shelf>()))
-                            .add(Shop.setName)
-                            .add(Shop.addShelf)
-                            .add(Shop.updateShelf);
-
-    static readonly shelfAt = defineCursor(
+    export const shelfAt = defineCursor(
         (shop: Shop, pos: number) => shop.shelves.get(pos),
-        (pos: number, shelfAction: typeof Shelf.reduce.actionType) => Shop.updateShelf([pos, shelfAction]));
+        (pos: number, shelfAction: Shelf.Action) => action("UPDATE_SHELF", {pos, shelfAction}));
 }
 
 const enableLogging = false;
@@ -92,7 +131,7 @@ describe("immuto", () => {
 
     it("has an initial state available via cursor", () => {
 
-        const book = createStoreCursor(logStore(Book.reduce.createStore()))();
+        const book = createStoreCursor(logStore(Book.reduce.createStore())).value;
 
         expect(book.title).toEqual("");
         expect(book.price).toEqual(0);
@@ -101,80 +140,57 @@ describe("immuto", () => {
         expect(JSON.stringify(book)).toEqual(`{"title":"","price":0,"authors":[]}`);
     });
 
-    it("can be updated via late-bound cursors", () => {
+    it("can be updated via cursors", () => {
 
-        const shelf = createStoreCursor(logStore(Shelf.reduce.createStore()));
-        shelf(Shelf.setDescription("Romance"));
+        const store = logStore(Shelf.reduce.createStore());
 
-        expect(JSON.stringify(shelf())).toEqual(`{"description":"Romance","books":[]}`);
+        const shelf1 = createStoreCursor(store);
+        const shelf2 = shelf1.dispatch(action("SET_DESCRIPTION", "Romance"));
 
-        // Create cursor here, before adding book!
-        const firstBook = Shelf.bookAt(shelf, 0);
+        expect(JSON.stringify(shelf2.value)).toEqual(`{"description":"Romance","books":[]}`);
 
-        shelf(Shelf.addBook("1985"));
+        const shelf3 = shelf2.dispatch(action("ADD_BOOK", "1985"));
 
-        expect(JSON.stringify(shelf())).toEqual(`{"description":"Romance","books":[{"title":"1985","price":0,"authors":[]}]}`);
+        expect(JSON.stringify(shelf3.value)).toEqual(`{"description":"Romance","books":[{"title":"1985","price":0,"authors":[]}]}`);
 
-        expect(firstBook().title).toEqual("1985");
-        expect(firstBook().price).toEqual(0);
+        const firstBook1 = Shelf.bookAt(shelf3, 0);
 
-        firstBook(Book.setPrice(5.99));
+        expect(firstBook1.value.title).toEqual("1985");
+        expect(firstBook1.value.price).toEqual(0);
 
-        expect(JSON.stringify(shelf())).toEqual(`{"description":"Romance","books":[{"title":"1985","price":5.99,"authors":[]}]}`);
+        const firstBook2 = firstBook1.dispatch(action("SET_PRICE", 5.99));
 
-        expect(firstBook().price).toEqual(5.99);
+        expect(JSON.stringify(store.getState())).toEqual(`{"description":"Romance","books":[{"title":"1985","price":5.99,"authors":[]}]}`);
+
+        expect(firstBook2.value.price).toEqual(5.99);
     });
 
-    it("can be updated via snapshot cursors", () => {
-
-        const shelf = createStoreCursor(logStore(Shelf.reduce.createStore()));
-        shelf(Shelf.setDescription("Romance"));
-        shelf(Shelf.addBook("1985"));
-
-        expect(JSON.stringify(shelf())).toEqual(`{"description":"Romance","books":[{"title":"1985","price":0,"authors":[]}]}`);
-
-        // ask for snapshot cursor, so have to do it after adding book
-        const firstBook = Shelf.bookAt(shelf, 0, true);
-
-        expect(firstBook().title).toEqual("1985");
-        expect(firstBook().price).toEqual(0);
-
-        firstBook(Book.setPrice(5.99));
-
-        expect(JSON.stringify(shelf())).toEqual(`{"description":"Romance","books":[{"title":"1985","price":5.99,"authors":[]}]}`);
-
-        // firstBook is a snapshot so doesn't see the change
-        expect(firstBook().price).toEqual(0);
-
-        // take another shapshot
-        const firstBookAgain = Shelf.bookAt(shelf, 0, true);
-        expect(firstBookAgain().price).toEqual(5.99);
-    });
 
     it("supports nested layers of cursors", () => {
 
-        const shop = createStoreCursor(logStore(Shop.reduce.createStore()));
-        shop(Shop.setName("Buy the Book, Inc."));
+        const store = logStore(Shop.reduce.createStore());
+        const shop1 = createStoreCursor(store);
 
-        shop(Shop.addShelf("Adventure"));
+        const shop2 = shop1.dispatch(action("SET_NAME", "Buy the Book, Inc."));
+        const shop3 = shop2.dispatch(action("ADD_SHELF", "Adventure"));
 
-        const firstShelf = Shop.shelfAt(shop, 0);
-        expect(firstShelf().description).toEqual("Adventure");
+        const firstShelf1 = Shop.shelfAt(shop3, 0);
+        expect(firstShelf1.value.description).toEqual("Adventure");
 
-        firstShelf(Shelf.addBook("Indiana Smith"));
+        const firstShelf2 = firstShelf1.dispatch(action("ADD_BOOK", "Indiana Smith"));
 
-        expect(JSON.stringify(shop())).toEqual(`{"name":"Buy the Book, Inc.","shelves":[{"description":"Adventure","books":[{"title":"Indiana Smith","price":0,"authors":[]}]}]}`);
+        expect(JSON.stringify(store.getState())).toEqual(`{"name":"Buy the Book, Inc.","shelves":[{"description":"Adventure","books":[{"title":"Indiana Smith","price":0,"authors":[]}]}]}`);
 
-        const firstBookOfFirstShelf = Shelf.bookAt(firstShelf, 0);
-        expect(firstBookOfFirstShelf().title).toEqual("Indiana Smith");
+        const firstBook1 = Shelf.bookAt(firstShelf2, 0);
+        expect(firstBook1.value.title).toEqual("Indiana Smith");
 
-        firstBookOfFirstShelf(Book.setPrice(4.99));
-        firstBookOfFirstShelf(Book.addAuthor("Jim Orwell"));
+        const firstBook2 = firstBook1.dispatch(action("SET_PRICE", 4.99));
+        const firstBook3 = firstBook2.dispatch(action("ADD_AUTHOR", "Jim Orwell"));
 
-        expect(JSON.stringify(shop())).toEqual(`{"name":"Buy the Book, Inc.","shelves":[{"description":"Adventure","books":[{"title":"Indiana Smith","price":4.99,"authors":["Jim Orwell"]}]}]}`);
+        expect(JSON.stringify(store.getState())).toEqual(`{"name":"Buy the Book, Inc.","shelves":[{"description":"Adventure","books":[{"title":"Indiana Smith","price":4.99,"authors":["Jim Orwell"]}]}]}`);
 
-        expect(firstBookOfFirstShelf().title).toEqual("Indiana Smith");
-        expect(firstBookOfFirstShelf().price).toEqual(4.99);
-        expect(firstBookOfFirstShelf().authors.first()).toEqual("Jim Orwell");
+        expect(firstBook3.value.title).toEqual("Indiana Smith");
+        expect(firstBook3.value.price).toEqual(4.99);
+        expect(firstBook3.value.authors.first()).toEqual("Jim Orwell");
     });
 });

@@ -9,6 +9,7 @@
         "emitDecoratorMetadata": true,
         "declaration": true,
         "noImplicitAny": true,
+        "noImplicitThis": true,
         "removeComments": false,
         "noLib": false,
         "preserveConstEnums": true,
@@ -20,6 +21,7 @@
         "sourceMap": true
     },
     "exclude": [
-        "node_modules"
+        "node_modules",
+        "built"
     ]
 }
