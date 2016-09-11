@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/danielearwicker/immuto.svg?branch=master)](https://travis-ci.org/danielearwicker/immuto)
+
 # immuto
 Very strongly typed Redux adaptation for TypeScript
 
