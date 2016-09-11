@@ -1,4 +1,10 @@
 # immuto
 Very strongly typed Redux adaptation for TypeScript
 
-Tried out some ideas here and then realised it would be a lot more powerful/succinct to fold them into [doop 2.0](https://github.com/danielearwicker/doop).
+[Read the in-depth tutorial and explanation.](http://danielearwicker.github.io/Immuto_Strongly_Typed_Redux_Composition.html)
+
+Or just install it with:
+
+    npm install immuto
+
+And figure it out from the tests!

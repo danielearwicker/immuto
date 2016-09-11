@@ -16,14 +16,45 @@ export interface Action<T extends string, P> {
 }
 
 /**
- * Makes it easy to create an action of a given type with full
- * type safety, as the type string will be captured at compile
- * time as a string literal type, so the combination of that
- * type string and the properties, P, can be checked by the
- * target reducer.
+ * Common features of an ActionCreator and a CollectionDefinition.
  */
-export function action<T extends string, P>(type: T, payload: P): Action<T, P> {
-    return { type, payload };
+export interface ActionDefinition<S, T extends string, P> {
+    readonly type: T;
+
+    reduce(state: S, payload: P): S;
+
+    readonly payloadType: P;
+    readonly stateType: S;
+}
+
+/**
+ * An ActionCreator is a function that creates actions and can
+ * also be registered with a reducer.
+ */
+export interface ActionCreator<S, T extends string, P>
+    extends ActionDefinition<S, T, P> {
+
+    (payload: P): Action<T, P>;
+}
+
+/**
+ * Defines an action, for later inclusion in a reducer.
+ */
+export function action<S, T extends string, P>(
+    type: T,
+    reduce: (state: S, payload: P) => S
+): ActionCreator<S, T, P> {
+
+    function create(payload: P) {
+        return { type, payload };
+    }
+
+    return assign(create, {
+        type,
+        reduce,
+        payloadType: undefined! as P,
+        stateType: undefined! as S
+    });
 }
 
 /**
@@ -31,7 +62,7 @@ export function action<T extends string, P>(type: T, payload: P): Action<T, P> {
  * and returns a modified state object. Here it is also equipped
  * with a method called action which allows multiple reducer
  * functions to be declaratively merged together into a single
- * function, and a createStore method that wraps Redux's createStore
+ * function, and a store method that wraps Redux's createStore
  * to make it perfectly type-safe.
  *
  * Note that reducers are immutable - given a reducer x, calling
@@ -58,17 +89,16 @@ export interface Reducer<S, A> {
 
     /**
      * Returns an enhanced Reducer capable of reducing
-     * an additional action type.
+     * some additional action type.
      */
     action<T extends string, P>(
-        type: T,
-        reduce: (state: S, props: P) => S
+        definition: ActionDefinition<S, T, P>
     ): Reducer<S, A | Action<T, P>>;
 
     /**
      * Creates a Redux store with extra type-safety.
      */
-    createStore(): Store<S, A>;
+    store(): Store<S, A>;
 }
 
 function isAction<T extends string>(
@@ -102,13 +132,12 @@ function chain<S, RA, HT extends string, HP>(
         empty,
 
         action<T extends string, P>(
-            type: T,
-            newReduce: (state: S, payload: P) => S
+            def: ActionDefinition<S, T, P>
         ) : Reducer<S, Action<T, P> | A> {
-            return chain<S, A | RA, T, P>(type, empty, newReduce, reduce);
+            return chain<S, A | RA, T, P>(def.type, empty, def.reduce, reduce);
         },
 
-        createStore(): Store<S, A> {
+        store(): Store<S, A> {
             return createStore(reduce);
         }
     });
@@ -121,10 +150,9 @@ function chain<S, RA, HT extends string, HP>(
 export function reducer<S>(empty: S) {
     return {
         action<T extends string, P>(
-            type: T,
-            reduce: (state: S, payload: P) => S
+            def: ActionDefinition<S, T, P>
         ) : Reducer<S, Action<T, P>> {
-            return chain<S, never, T, P>(type, empty, reduce, s => s === undefined ? empty : s);
+            return chain<S, never, T, P>(def.type, empty, def.reduce, s => s === undefined ? empty : s);
         }
     };
 }
@@ -135,7 +163,7 @@ export function reducer<S>(empty: S) {
  * not pure (it may return a different value each time you call it).
  */
 export interface Store<S, A> {
-    dispatch(action: A): void;
+    dispatch<A1 extends A>(action: A1): A1;
     getState(): S;
     subscribe(listener: () => void): Unsubscribe;
 }
@@ -145,13 +173,13 @@ export interface Store<S, A> {
  * A cursor's value property never changes. Instead, the dispatch
  * method returns a new cursor representing the new state.
  *
- * Note that, unlike a plain non-Redux cursor, updating is always
- * performed by dispatching an action.
+ * Note that, unlike a traditional non-Redux cursor, updating is
+ * always performed by dispatching an action.
  */
 export interface Cursor<S, A> {
 
     /**
-     * The value of the store at the time this cursor was created.
+     * The state at the time this cursor was created.
      */
     readonly state: S;
 
@@ -160,7 +188,16 @@ export interface Cursor<S, A> {
      * store updating, and a new cursor is returned representing
      * the new state.
      */
-    dispatch(action: A): Cursor<S, A>;
+    (action: A): Cursor<S, A>;
+
+    /**
+     * A cursor may address an object that no longer exists or
+     * hasn't yet been created, in which case the state will be
+     * the empty object for the type. The exists property can be
+     * used to unambiguously detect whether the object really
+     * exists.
+     */
+    readonly exists: boolean;
 }
 
 /**
@@ -170,13 +207,15 @@ export interface Cursor<S, A> {
 export function snapshot<S, A>(
     store: Store<S, A>
 ): Cursor<S, A> {
-    return {
-        state: store.getState(),
-        dispatch(action) {
-            store.dispatch(action);
-            return snapshot(store);
-        }
-    };
+    function dispatch(action: A) {
+        store.dispatch(action);
+        return snapshot(store);
+    }
+
+    return assign(dispatch, {
+        exists: true,
+        state: store.getState()
+    });
 }
 
 /**
@@ -190,17 +229,16 @@ export function snapshot<S, A>(
  * state.
  */
 export function cursor<OS, OA, K, IS, IA>(
-    fetch: (outer: OS, key: K) => IS,
+    fetch: (outer: OS, key: K) => { exists: boolean, state: IS },
     update: (key: K, action: IA) => OA
 ) {
     return (outer: Cursor<OS, OA>, key: K): Cursor<IS, IA> => {
-        return {
-            state: fetch(outer.state, key),
-            dispatch(innerAction: IA) {
-                return cursor(fetch, update)(
-                    outer.dispatch(update(key, innerAction)), key);
-            }
+        const fetched = fetch(outer.state, key);
+        function dispatch(innerAction: IA) {
+            return cursor(fetch, update)(
+                outer(update(key, innerAction)), key);
         };
+        return assign(dispatch, fetched);
     };
 }
 
@@ -218,16 +256,8 @@ export interface Update<K, U> {
     remove?: boolean;
 }
 
-export function update<T extends string, K, U>(type: T, key: K, update?: U) {
-    return action<T, Update<K, U>>(type, { key, update });
-}
-
-export function remove<T extends string, K>(type: T, key: K) {
-    return action(type, { key, remove: true });
-}
-
 export interface CollectionOperations<C, K, I> {
-    get: (state: C, key: K) => { exists: boolean, value?: I };
+    get: (state: C, key: K) => { exists: boolean, state?: I };
     set: (state: C, key: K, item: I) => C;
     remove: (state: C, key: K) => C;
 }
@@ -235,7 +265,7 @@ export interface CollectionOperations<C, K, I> {
 export function map<K, I>(): CollectionOperations<Map<K, I>, K, I> {
     return {
         get(items, key) {
-            return { exists: items.has(key), value: items.get(key) };
+            return { exists: items.has(key), state: items.get(key) };
         },
 
         set(items, key, item) {
@@ -244,6 +274,27 @@ export function map<K, I>(): CollectionOperations<Map<K, I>, K, I> {
 
         remove(items, key) {
             return items.remove(key);
+        }
+    };
+}
+
+export function ObjectUsingString<I>(): CollectionOperations<{ [name: string]: I }, string, I> {
+    return {
+        get(items, key) {
+            return {
+                exists: Object.prototype.hasOwnProperty.call(key),
+                state: items[key]
+            };
+        },
+
+        set(items, key, item) {
+            return amend(items, { [key]: item });
+        },
+
+        remove(items, key) {
+            items = assign({}, items);
+            delete items[key];
+            return items;
         }
     };
 }
@@ -268,7 +319,7 @@ export function map<K, I>(): CollectionOperations<Map<K, I>, K, I> {
  * it will automatically be wrapped in a SHELVES action with the right key:
  *
  *     {
- *       type: "SHELVES",
+ *       type: "BOOKS",
  *       payload: {
  *         key: 3,
  *         update: {
@@ -280,6 +331,21 @@ export function map<K, I>(): CollectionOperations<Map<K, I>, K, I> {
  *
  * Naturally this wrapping process can be nested to any depth.
  */
+
+export interface CollectionCursor<I, A> extends Cursor<I, A> {
+    remove(): void;
+}
+
+export interface CollectionDefinition<T extends string, S, C, K, I, A>
+    extends ActionDefinition<S, T, Update<K, A>> {
+
+    (outer: Cursor<S, Action<T, Update<K, A>>>, key: K): CollectionCursor<I, A>;
+
+    update(key: K, action: A): Action<T, Update<K, A>>;
+    add(key: K): Action<T, Update<K, any>>;
+    remove(key: K): Action<T, Update<K, any>>;
+}
+
 export function collection<T extends string, S, C, K, I, A>({
     /** The action type name associated with this collection */
     type,
@@ -297,18 +363,36 @@ export function collection<T extends string, S, C, K, I, A>({
     operations: CollectionOperations<C, K, I>,
     get: (state: S) => C,
     set: (state: S, collection: C) => S
-}) {
+}): CollectionDefinition<T, S, C, K, I, A> {
 
-    function getValue(collection: C, key: K) {
+    type payload_t = Update<K, A>;
+    type action_t = Action<T, payload_t>;
 
-        const item = operations.get(collection, key);
-        return item.exists ? item.value! : reducer.empty;
+    function add(key: K): action_t {
+        return { type, payload: { key } };
     }
 
-    function reduce(state: S, {key, update, remove}: Update<K, A>) {
+    function remove(key: K): action_t {
+        return { type, payload: { key, remove: true } };
+    }
+
+    function update<U>(key: K, update: U): Action<T, Update<K, U>> {
+        return { type, payload: { key, update } };
+    }
+
+    function fetch(collection: C, key: K) {
+
+        const item = operations.get(collection, key);
+        return {
+            exists: item.exists,
+            state: item.exists ? item.state! : reducer.empty
+        };
+    }
+
+    function reduce(state: S, {key, update, remove}: payload_t) {
 
         const collection = get(state);
-        const value = getValue(collection, key);
+        const value = fetch(collection, key).state;
 
         return set(state, remove
             ? operations.remove(collection, key)
@@ -318,16 +402,31 @@ export function collection<T extends string, S, C, K, I, A>({
         );
     }
 
-    const item = cursor(
-        (state: S, key: K) => getValue(get(state), key),
-        (key: K, action: A) => update(type, key, action)
+    const plainCursors = cursor(
+        (state: S, key: K) => fetch(get(state), key),
+        update
     );
 
-    return assign(item, { type, reduce });
+    const collectionCursors = (outer: Cursor<S, action_t>, key: K) => {
+        const plainCursor = plainCursors(outer, key);
+        return assign(plainCursor, {
+            remove: () => outer(remove(key))
+        });
+    }
+
+    return assign(collectionCursors, {
+        type,
+        reduce,
+        update,
+        add,
+        remove,
+        payloadType: undefined! as Update<K, A>,
+        stateType: undefined! as S
+    });
 }
 
 /**
- * Basic Substitute for Object.assign (and one fine day, object spread...)
+ * Basic substitute for Object.assign
  */
 export function assign<T, S1, S2>(target: T, source1: S1, source2: S2): T & S1 & S2;
 export function assign<T, S1>(target: T, source1: S1): T & S1;
@@ -338,4 +437,17 @@ export function assign<T>(target: T, ...sources: any[]): any {
         }
     }
     return target;
+}
+
+/**
+ * Pretty good subsitute for object spread syntax. Instead of:
+ *
+ *    { ...book, title }
+ *
+ * say:
+ *
+ *    amend(book, { title })
+ */
+export function amend<O1, O2>(o1: O1, o2: O2) {
+    return assign({}, o1, o2);
 }
