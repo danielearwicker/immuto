@@ -11,4 +11,4 @@ Or just install it with:
 
 And figure it out from the tests!
 
-Developed in http://alm.tools.
+Developed in http://alm.tools. :rose:
