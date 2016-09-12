@@ -10,3 +10,5 @@ Or just install it with:
     npm install immuto
 
 And figure it out from the tests!
+
+Developed in http://alm.tools.

@@ -1,6 +1,6 @@
 import { List, Map } from "immutable";
 
-import { snapshot, amend, map, Store } from "../index";
+import { snapshot, amend, Store } from "../index";
 
 import { Book } from "./book";
 import { Shelf } from "./shelf";

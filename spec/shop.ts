@@ -1,7 +1,7 @@
 import { List, Map } from "immutable";
 
 import * as I from "../index";
-import { action, reducer, collection, reference, snapshot, amend, map, Store } from "../index";
+import { action, reducer, collection, amend, immutableMap } from "../index";
 
 import { Shelf } from "./shelf";
 
@@ -18,7 +18,7 @@ export namespace Shop {
     export const shelves = collection({
         type: "SHELVES",
         reducer: Shelf.reduce,
-        operations: map<string, Shelf>(),
+        operations: immutableMap<string, Shelf>(),
         get: (shop: Shop) => shop.shelves,
         set: (shop, shelves) => amend(shop, { shelves })
     });

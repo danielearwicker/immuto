@@ -262,7 +262,7 @@ export interface CollectionOperations<C, K, I> {
     remove: (state: C, key: K) => C;
 }
 
-export function map<K, I>(): CollectionOperations<Map<K, I>, K, I> {
+export function immutableMap<K, I>(): CollectionOperations<Map<K, I>, K, I> {
     return {
         get(items, key) {
             return { exists: items.has(key), state: items.get(key) };
