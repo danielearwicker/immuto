@@ -425,6 +425,63 @@ export function collection<T extends string, S, C, K, I, A>({
     });
 }
 
+export interface ReferenceDefinition<T extends string, S, I, A>
+    extends ActionDefinition<S, T, Update<void, A>> {
+    (outer: Cursor<S, Action<T, Update<void, A>>>): Cursor<I, A>;
+    update(action: A): Action<T, Update<void, A>>;
+}
+
+export function reference<T extends string, S, I, A>({
+    /** The action type name associated with this reference */
+    type,
+    /** The reducer function for the referenced type */
+    reducer,
+    /** Specifies how to get the referenced object from the object that owns it */
+    get,
+    /** Updates the owning object with a new version of the referenced object */
+    set
+}: {
+    type: T,
+    reducer: Reducer<I, A>,
+    get: (state: S) => I,
+    set: (state: S, collection: I) => S
+}): ReferenceDefinition<T, S, I, A> {
+
+    const col = collection<T, S, I, void, I, A>({
+        type,
+        operations: {
+            get(items, key) {
+                return { exists: true, state: items };
+            },
+
+            set(items, key, item) {
+                return item;
+            },
+
+            remove(items, key) {
+                return items;
+            }
+        },
+        reducer,
+        get,
+        set
+    });
+
+    const refCursors = (outer: Cursor<S, Action<T, Update<void, A>>>) => {
+        return col(outer, undefined);
+    }
+
+    return assign(refCursors, {
+        type,
+        reduce: col.reduce,
+        update(u: A) {
+            return col.update(undefined, u);
+        },
+        payloadType: col.payloadType,
+        stateType: col.stateType
+    });
+}
+
 /**
  * Basic substitute for Object.assign
  */

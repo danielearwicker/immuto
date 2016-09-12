@@ -1,96 +1,13 @@
 import { List, Map } from "immutable";
 
-import { action, reducer, collection, snapshot, amend, map, Store } from "../index";
+import { snapshot, amend, map, Store } from "../index";
 
-interface Book {
-    readonly title: string;
-    readonly price: number;
-    readonly authors: List<string>;
-}
+import { Book } from "./book";
+import { Shelf } from "./shelf";
+import { Shop } from "./shop";
+import { Founder } from "./founder";
 
-namespace Book {
-
-    export const setTitle = action("SET_TITLE",
-        (book: Book, title: string) => amend(book, { title }));
-
-    export const setPrice = action("SET_PRICE",
-        (book: Book, price: number) => amend(book, { price }));
-
-    export const addAuthor = action("ADD_AUTHOR",
-        (book: Book, author: string) => amend(book, { authors: book.authors.push(author) }));
-
-    export const empty: Book = {
-        title: "",
-        price: 0,
-        authors: List<string>()
-    };
-
-    export const reduce = reducer<Book>(empty)
-        .action(setTitle)
-        .action(setPrice)
-        .action(addAuthor);
-}
-
-const b = Book.reduce(Book.empty, Book.setTitle("Daniel"));
-
-
-interface Shelf {
-    readonly description: string;
-    readonly books: Map<number, Book>;
-}
-
-namespace Shelf {
-
-    export const setDescription = action("SET_DESCRIPTION",
-        (shelf: Shelf, description: string) => amend(shelf, { description }));
-
-    export const books = collection({
-        type: "BOOKS",
-        reducer: Book.reduce,
-        operations: map<number, Book>(),
-        get: (shelf: Shelf) => shelf.books,
-        set: (shelf, books) => amend(shelf, { books })
-    });
-
-    export const empty: Shelf = {
-        description: "",
-        books: Map<number, Book>()
-    };
-
-    export const reduce = reducer<Shelf>(empty)
-        .action(setDescription)
-        .action(books);
-}
-
-interface Shop {
-    readonly name: string;
-    readonly shelves: Map<string, Shelf>;
-}
-
-namespace Shop {
-
-    export const setName = action("SET_NAME",
-        (shop: Shop, name: string) => amend(shop, { name }));
-
-    export const shelves = collection({
-        type: "SHELVES",
-        reducer: Shelf.reduce,
-        operations: map<string, Shelf>(),
-        get: (shop: Shop) => shop.shelves,
-        set: (shop, shelves) => amend(shop, { shelves })
-    });
-
-    export const empty: Shop = {
-        name: "",
-        shelves: Map<string, Shelf>()
-    };
-
-    export const reduce = reducer(empty)
-        .action(setName)
-        .action(shelves);
-}
-
-const enableLogging = true;
+const enableLogging = false;
 
 function logStore<State, Types>(store: Store<State, Types>) {
     if (enableLogging) {
@@ -151,6 +68,20 @@ describe("I", () => {
         expect(JSON.stringify(store.getState())).toEqual(`{"description":"Romance","books":{"1001":{"title":"1985","price":5.99,"authors":[]}}}`);
 
         expect(firstBook2.state.price).toEqual(5.99);
+    });
+
+    it("supports references and cursors through them", () => {
+
+        const store = logStore(Founder.reduce.store());
+
+        const founder1 = snapshot(store)(Founder.setName("Samuel J. Borders"));
+
+        const shop1 = Founder.shop(founder1);
+
+        shop1(Shop.setName("Borders"));
+
+        expect(store.getState().name).toEqual("Samuel J. Borders");
+        expect(store.getState().shop.name).toEqual("Borders");
     });
 
     it("supports removing items from collections", () => {
