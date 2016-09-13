@@ -86,6 +86,7 @@ export interface Reducer<S, A> {
      * a useful runtime value.)
      */
     actionType: A;
+    cursorType: Cursor<S, A>;
 
     /**
      * Returns an enhanced Reducer capable of reducing
@@ -128,6 +129,7 @@ function chain<S, RA, HT extends string, HP>(
     return assign(reduce, {
 
         actionType: undefined! as A,
+        cursorType: undefined! as Cursor<S, A>,
 
         empty,
 
@@ -157,15 +159,18 @@ export function reducer<S>(empty: S) {
     };
 }
 
+export interface Subscribable {
+    subscribe(listener: () => void): Unsubscribe;
+}
+
 /**
  * Describes a minimal Redux-like store. Note that stores are not
  * immutable (that's their whole purpose) and therefore getState is
  * not pure (it may return a different value each time you call it).
  */
-export interface Store<S, A> {
+export interface Store<S, A> extends Subscribable {
     dispatch<A1 extends A>(action: A1): A1;
     getState(): S;
-    subscribe(listener: () => void): Unsubscribe;
 }
 
 /**
@@ -198,23 +203,33 @@ export interface Cursor<S, A> {
      * exists.
      */
     readonly exists: boolean;
+
+    readonly subscribable: Subscribable;
+
+    refresh(this: Cursor<S, A>): Cursor<S, A>;
 }
 
 /**
- * Takes a snapshot of a Redux-like store, making it into a
- * pure cursor.
+ * Takes a snapshot of a Redux-like store, making it into a pure cursor.
  */
 export function snapshot<S, A>(
-    store: Store<S, A>
+    store: Store<S, A>,
+
 ): Cursor<S, A> {
     function dispatch(action: A) {
         store.dispatch(action);
         return snapshot(store);
     }
 
+    const state = store.getState();
+
     return assign(dispatch, {
         exists: true,
-        state: store.getState()
+        state,
+        refresh(this: Cursor<S, A>) {
+            return snapshot(store);
+        },
+        subscribable: store
     });
 }
 
@@ -234,11 +249,26 @@ export function cursor<OS, OA, K, IS, IA>(
 ) {
     return (outer: Cursor<OS, OA>, key: K): Cursor<IS, IA> => {
         const fetched = fetch(outer.state, key);
+
         function dispatch(innerAction: IA) {
             return cursor(fetch, update)(
                 outer(update(key, innerAction)), key);
         };
-        return assign(dispatch, fetched);
+
+        return assign(dispatch, fetched, {
+            subscribable: outer.subscribable,
+            refresh(this: Cursor<IS, IA>) {
+                const latestOuter = outer.refresh();
+                if (latestOuter.state === outer.state) {
+                    return this;
+                }
+                const latestFetched = fetch(latestOuter.state, key);
+                if (latestFetched.state === fetched.state) {
+                    return this;
+                }
+                return cursor(fetch, update)(latestOuter, key);
+            }
+        });
     };
 }
 
@@ -278,11 +308,32 @@ export function immutableMap<K, I>(): CollectionOperations<Map<K, I>, K, I> {
     };
 }
 
-export function ObjectUsingString<I>(): CollectionOperations<{ [name: string]: I }, string, I> {
+export function objectUsingString<I>(): CollectionOperations<{ [name: string]: I }, string, I> {
     return {
         get(items, key) {
             return {
-                exists: Object.prototype.hasOwnProperty.call(key),
+                exists: Object.prototype.hasOwnProperty.call(items, key),
+                state: items[key]
+            };
+        },
+
+        set(items, key, item) {
+            return amend(items, { [key]: item });
+        },
+
+        remove(items, key) {
+            items = assign({}, items);
+            delete items[key];
+            return items;
+        }
+    };
+}
+
+export function objectUsingNumber<I>(): CollectionOperations<{ [id: number]: I }, number, I> {
+    return {
+        get(items, key) {
+            return {
+                exists: Object.prototype.hasOwnProperty.call(items, key),
                 state: items[key]
             };
         },
@@ -338,9 +389,7 @@ export interface CollectionCursor<I, A> extends Cursor<I, A> {
 
 export interface CollectionDefinition<T extends string, S, C, K, I, A>
     extends ActionDefinition<S, T, Update<K, A>> {
-
     (outer: Cursor<S, Action<T, Update<K, A>>>, key: K): CollectionCursor<I, A>;
-
     update(key: K, action: A): Action<T, Update<K, A>>;
     add(key: K): Action<T, Update<K, any>>;
     remove(key: K): Action<T, Update<K, any>>;
