@@ -525,7 +525,7 @@ export function property<T extends string, S, P>(
         }
 
         console.log(`Immuto.property ${type}: generated reduce automatically for ${matched[3]}`);
-        reduce = (state, value) => assign(state, { [matched[3]]: value });
+        reduce = (state, value) => amend(state, { [matched[3]]: value });
     }
 
     return assign(create, {

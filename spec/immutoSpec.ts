@@ -150,6 +150,8 @@ describe("I", () => {
         title1("Star Warts");
         expect(store.getState().title).toEqual("Star Warts");
 
+        expect(Book.empty.title).toEqual("");
+
         const title2 = Book.title(snapshot(store));
         expect(title2.state).toEqual("Star Warts");
     });
