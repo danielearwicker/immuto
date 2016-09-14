@@ -474,6 +474,48 @@ export function collection<T extends string, S, C, K, I, A>({
     });
 }
 
+export interface Property<P> {
+    readonly state: P;
+    (newValue: P): void;
+}
+
+export interface PropertyDefinition<T extends string, S, P>
+    extends ActionDefinition<S, T, P> {
+
+    (outer: Cursor<S, Action<T, P>>): Property<P>;
+    update(value: P): Action<T, P>;
+}
+
+export function property<T extends string, S, P>(
+    type: T,
+    fetch: (state: S) => P,
+    reduce: (state: S, payload: P) => S
+): PropertyDefinition<T, S, P> {
+
+    function update(payload: P): Action<T, P> {
+        return { type, payload };
+    }
+
+    function create(outer: Cursor<S, Action<T, P>>) {
+
+        function dispatch(value: P) {
+            outer(update(value));
+        }
+
+        return assign(dispatch, {
+            state: fetch(outer.state)
+        });
+    }
+
+    return assign(create, {
+        update,
+        type,
+        reduce,
+        payloadType: undefined! as P,
+        stateType: undefined! as S
+    });
+}
+
 export interface ReferenceDefinition<T extends string, S, I, A>
     extends ActionDefinition<S, T, Update<void, A>> {
     (outer: Cursor<S, Action<T, Update<void, A>>>): Cursor<I, A>;
