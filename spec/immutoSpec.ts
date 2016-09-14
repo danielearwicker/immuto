@@ -141,4 +141,16 @@ describe("I", () => {
         expect(firstBook3.state.price).toEqual(4.99);
         expect(firstBook3.state.authors.first()).toEqual("Jim Orwell");
     });
+
+    it("supports properties with magic reducers (experimental)", () => {
+
+        const store = logStore(Book.reduce.store());
+
+        const title1 = Book.title(snapshot(store));
+        title1("Star Warts");
+        expect(store.getState().title).toEqual("Star Warts");
+
+        const title2 = Book.title(snapshot(store));
+        expect(title2.state).toEqual("Star Warts");
+    });
 });

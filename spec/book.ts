@@ -1,7 +1,7 @@
 import { List, Map } from "immutable";
 
 import * as I from "../index";
-import { action, reducer, amend } from "../index";
+import { action, property, reducer, amend } from "../index";
 
 export interface Book {
     readonly title: string;
@@ -10,6 +10,8 @@ export interface Book {
 }
 
 export namespace Book {
+
+    export const title = property("TITLE", (book: Book) => book.title);
 
     export const setTitle = action("SET_TITLE",
         (book: Book, title: string) => amend(book, { title }));
@@ -27,6 +29,7 @@ export namespace Book {
     };
 
     export const reduce = reducer<Book>(empty)
+        .action(title)
         .action(setTitle)
         .action(setPrice)
         .action(addAuthor);

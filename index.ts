@@ -486,10 +486,14 @@ export interface PropertyDefinition<T extends string, S, P>
     update(value: P): Action<T, P>;
 }
 
+// Oh yes, I went there...
+var matchFunction = /function\s*\(\s*([a-z]+)\s*\)\s*\{\s*return\s+([a-z]+)\.([a-z]+)/i
+var matchLambda = /\(?\s*([a-z]+)\s*\)?\s*\=\>\s*([a-z]+)\.([a-z]+)/i
+
 export function property<T extends string, S, P>(
     type: T,
     fetch: (state: S) => P,
-    reduce: (state: S, payload: P) => S
+    reduce?: (state: S, payload: P) => S
 ): PropertyDefinition<T, S, P> {
 
     function update(payload: P): Action<T, P> {
@@ -505,6 +509,23 @@ export function property<T extends string, S, P>(
         return assign(dispatch, {
             state: fetch(outer.state)
         });
+    }
+
+    if (!reduce) {
+        // We might be able to generate reduce by parsing the source of fetch!
+        const src = fetch.toString();
+
+        const matched = matchFunction.exec(src) || matchLambda.exec(src)
+        if (!matched) {
+            throw new Error(`Immuto.property ${type} too complex to parse, needs explicit reduce`);
+        }
+
+        if (matched[1] !== matched[2]) {
+            throw new Error(`Immuto.property ${type} inconsistent parameter usage: ${matched[1]}, ${matched[2]}`);
+        }
+
+        console.log(`Immuto.property ${type}: generated reduce automatically for ${matched[3]}`);
+        reduce = (state, value) => assign(state, { [matched[3]]: value });
     }
 
     return assign(create, {
