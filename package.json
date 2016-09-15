@@ -26,5 +26,8 @@
   "dependencies": {
     "immutable": "^3.8.1",
     "redux": "^3.5.2"
+  },
+  "devDependencies": {
+    "typescript": "2.1.0-dev.20160914"
   }
 }
