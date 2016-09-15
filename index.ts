@@ -381,24 +381,56 @@ export interface CollectionDefinition<T extends string, S, C, K, I, A>
     remove(key: K): Action<T, Update<K, any>>;
 }
 
-export function collection<T extends string, S, C, K, I, A>({
+export interface CollectionOptions<T extends string, S, C, K, I, A> {
     /** The action type name associated with this collection */
-    type,
-    /** A helper object that defines how to update the collection type */
-    operations,
+    type: T,
     /** The reducer function for the item type in the collection */
-    reducer,
+    reducer: Reducer<I, A>,
+    /** A helper object that defines how to update the collection type */
+    operations: CollectionOperations<C, K, I>,
     /** Specifies how to get the collection from the object that owns it */
-    get,
+    get: (state: S) => C,
     /** Updates the owning object with a new version of the collection */
-    set
-}: {
+    set?: (state: S, collection: C) => S
+}
+
+export function collection<T extends string, S, C, K, I, A>(
     type: T,
     reducer: Reducer<I, A>,
     operations: CollectionOperations<C, K, I>,
     get: (state: S) => C,
     set?: (state: S, collection: C) => S
-}): CollectionDefinition<T, S, C, K, I, A> {
+): CollectionDefinition<T, S, C, K, I, A>;
+
+export function collection<T extends string, S, C, K, I, A>(
+    options: CollectionOptions<T, S, C, K, I, A>
+): CollectionDefinition<T, S, C, K, I, A>;
+
+export function collection<T extends string, S, C, K, I, A>(
+    optionsOrType: CollectionOptions<T, S, C, K, I, A> | T,
+    opt_reducer?: Reducer<I, A>,
+    opt_operations?: CollectionOperations<C, K, I>,
+    opt_get?: (state: S) => C,
+    set?: (state: S, collection: C) => S
+): CollectionDefinition<T, S, C, K, I, A> {
+
+    let type: T;
+    let operations: CollectionOperations<C, K, I>;
+    let reducer: Reducer<I, A>;
+    let get: (state: S) => C;
+
+    if (typeof optionsOrType === "string") {
+        type = optionsOrType;
+        operations = opt_operations!;
+        reducer = opt_reducer!;
+        get = opt_get!;
+    } else {
+        type = optionsOrType.type;
+        operations = optionsOrType.operations;
+        reducer = optionsOrType.reducer;
+        get = optionsOrType.get;
+        set = optionsOrType.set;
+    }
 
     type payload_t = Update<K, A>;
     type action_t = Action<T, payload_t>;
@@ -500,7 +532,6 @@ function ensureReducer<S, P>(
             `- inconsistent parameter usage: ${matched[1]}, ${matched[2]}`);
     }
 
-    console.log(`Generated reduce automatically for ${context} on ${matched[3]}`);
     return (state, value) => amend(state, { [matched[3]]: value });
 }
 
@@ -543,41 +574,65 @@ export interface ReferenceDefinition<T extends string, S, I, A>
     update(action: A): Action<T, Update<void, A>>;
 }
 
-export function reference<T extends string, S, I, A>({
+export interface ReferenceOptions<T extends string, S, I, A> {
     /** The action type name associated with this reference */
-    type,
+    type: T,
     /** The reducer function for the referenced type */
-    reducer,
-    /** Specifies how to get the referenced object from the object that owns it */
-    get,
-    /** Updates the owning object with a new version of the referenced object */
-    set
-}: {
+    reducer: Reducer<I, A>,
+    /** Specifies how to get the item from the object that owns it */
+    get: (state: S) => I,
+    /** Updates the owning object with a new version of the item */
+    set?: (state: S, item: I) => S
+}
+
+export function reference<T extends string, S, I, A>(
     type: T,
     reducer: Reducer<I, A>,
     get: (state: S) => I,
-    set: (state: S, collection: I) => S
-}): ReferenceDefinition<T, S, I, A> {
+    set?: (state: S, item: I) => S
+): ReferenceDefinition<T, S, I, A>;
 
-    const col = collection<T, S, I, void, I, A>({
-        type,
-        operations: {
-            get(items, key) {
-                return { exists: true, state: items };
-            },
+export function reference<T extends string, S, I, A>(
+    options: ReferenceOptions<T, S, I, A>
+): ReferenceDefinition<T, S, I, A>;
 
-            set(items, key, item) {
-                return item;
-            },
+export function reference<T extends string, S, I, A>(
+    optionsOrType: ReferenceOptions<T, S, I, A> | T,
+    opt_reducer?: Reducer<I, A>,
+    opt_get?: (state: S) => I,
+    set?: (state: S, item: I) => S
+): ReferenceDefinition<T, S, I, A> {
 
-            remove(items, key) {
-                return items;
-            }
+    let type: T;
+    let reducer: Reducer<I, A>;
+    let get: (state: S) => I;
+
+    if (typeof optionsOrType === "string") {
+        type = optionsOrType;
+        reducer = opt_reducer!;
+        get = opt_get!;
+    } else {
+        type = optionsOrType.type;
+        reducer = optionsOrType.reducer;
+        get = optionsOrType.get;
+        set = optionsOrType.set;
+    }
+
+    const ops: CollectionOperations<I, void, I> = {
+        get(items, key) {
+            return { exists: true, state: items };
         },
-        reducer,
-        get,
-        set
-    });
+
+        set(items, key, item) {
+            return item;
+        },
+
+        remove(items, key) {
+            return items;
+        }
+    };
+
+    const col = collection(type, reducer, ops, get, set);
 
     const refCursors = (outer: Cursor<S, Action<T, Update<void, A>>>) => {
         return col(outer, undefined);

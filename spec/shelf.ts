@@ -15,13 +15,10 @@ export namespace Shelf {
     export const setDescription = action("SET_DESCRIPTION",
         (shelf: Shelf, description: string) => amend(shelf, { description }));
 
-    export const books = collection({
-        type: "BOOKS",
-        reducer: Book.reduce,
-        operations: immutableMapOperations<number, Book>(),
-        get: (shelf: Shelf) => shelf.books,
-        set: (shelf, books) => amend(shelf, { books })
-    });
+    export const books = collection("BOOKS", Book.reduce,
+        immutableMapOperations<number, Book>(),
+        (shelf: Shelf) => shelf.books
+    );
 
     export const empty: Shelf = {
         description: "",
