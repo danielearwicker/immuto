@@ -1,6 +1,6 @@
 {
   "name": "immuto",
-  "version": "0.9.9",
+  "version": "0.9.11",
   "description": "Very strongly typed Redux adaptation for TypeScript",
   "main": "built/index.js",
   "typings": "built/index.d.ts",

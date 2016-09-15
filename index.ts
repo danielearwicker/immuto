@@ -203,10 +203,6 @@ export interface Cursor<S, A> {
      * exists.
      */
     readonly exists: boolean;
-
-    readonly subscribable: Subscribable;
-
-    refresh(this: Cursor<S, A>): Cursor<S, A>;
 }
 
 /**
@@ -226,10 +222,9 @@ export function snapshot<S, A>(
     return assign(dispatch, {
         exists: true,
         state,
-        refresh(this: Cursor<S, A>) {
-            return snapshot(store);
-        },
-        subscribable: store
+        valueOf() {
+            return state;
+        }
     });
 }
 
@@ -256,17 +251,8 @@ export function cursor<OS, OA, K, IS, IA>(
         };
 
         return assign(dispatch, fetched, {
-            subscribable: outer.subscribable,
-            refresh(this: Cursor<IS, IA>) {
-                const latestOuter = outer.refresh();
-                if (latestOuter.state === outer.state) {
-                    return this;
-                }
-                const latestFetched = fetch(latestOuter.state, key);
-                if (latestFetched.state === fetched.state) {
-                    return this;
-                }
-                return cursor(fetch, update)(latestOuter, key);
+            valueOf() {
+                return fetched.state;
             }
         });
     };
@@ -411,7 +397,7 @@ export function collection<T extends string, S, C, K, I, A>({
     reducer: Reducer<I, A>,
     operations: CollectionOperations<C, K, I>,
     get: (state: S) => C,
-    set: (state: S, collection: C) => S
+    set?: (state: S, collection: C) => S
 }): CollectionDefinition<T, S, C, K, I, A> {
 
     type payload_t = Update<K, A>;
@@ -438,12 +424,14 @@ export function collection<T extends string, S, C, K, I, A>({
         };
     }
 
+    const ensuredSet = ensureReducer(`collection(${type})`, get, set);
+
     function reduce(state: S, {key, update, remove}: payload_t) {
 
         const collection = get(state);
         const value = fetch(collection, key).state;
 
-        return set(state, remove
+        return ensuredSet(state, remove
             ? operations.remove(collection, key)
             : operations.set(collection, key, update
                 ? reducer(value, update)
@@ -490,6 +478,32 @@ export interface PropertyDefinition<T extends string, S, P>
 var matchFunction = /function\s*\(\s*([a-z]+)\s*\)\s*\{\s*return\s+([a-z]+)\.([a-z]+)/i
 var matchLambda = /\(?\s*([a-z]+)\s*\)?\s*\=\>\s*([a-z]+)\.([a-z]+)/i
 
+function ensureReducer<S, P>(
+    context: string,
+    fetch: (state: S) => P,
+    reduce?: (state: S, payload: P) => S
+): (state: S, payload: P) => S {
+    if (reduce) {
+        return reduce;
+    }
+    // We might be able to generate reduce by parsing the source of fetch!
+    const src = fetch.toString();
+
+    const matched = matchFunction.exec(src) || matchLambda.exec(src)
+    if (!matched) {
+        throw new Error(`Cannot generate reducer for ${context} `
+            + `- too complex to parse, needs explicit reduce`);
+    }
+
+    if (matched[1] !== matched[2]) {
+        throw new Error(`Cannot generate reducer for ${context} ` +
+            `- inconsistent parameter usage: ${matched[1]}, ${matched[2]}`);
+    }
+
+    console.log(`Generated reduce automatically for ${context} on ${matched[3]}`);
+    return (state, value) => amend(state, { [matched[3]]: value });
+}
+
 export function property<T extends string, S, P>(
     type: T,
     fetch: (state: S) => P,
@@ -507,31 +521,17 @@ export function property<T extends string, S, P>(
         }
 
         return assign(dispatch, {
-            state: fetch(outer.state)
+            state: fetch(outer.state),
+            valueOf() {
+                return outer.state;
+            }
         });
-    }
-
-    if (!reduce) {
-        // We might be able to generate reduce by parsing the source of fetch!
-        const src = fetch.toString();
-
-        const matched = matchFunction.exec(src) || matchLambda.exec(src)
-        if (!matched) {
-            throw new Error(`Immuto.property ${type} too complex to parse, needs explicit reduce`);
-        }
-
-        if (matched[1] !== matched[2]) {
-            throw new Error(`Immuto.property ${type} inconsistent parameter usage: ${matched[1]}, ${matched[2]}`);
-        }
-
-        console.log(`Immuto.property ${type}: generated reduce automatically for ${matched[3]}`);
-        reduce = (state, value) => amend(state, { [matched[3]]: value });
     }
 
     return assign(create, {
         update,
         type,
-        reduce,
+        reduce: ensureReducer(`property(${type})`, fetch, reduce),
         payloadType: undefined! as P,
         stateType: undefined! as S
     });
