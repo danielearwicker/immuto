@@ -19,8 +19,7 @@ export namespace Shop {
         type: "SHELVES",
         reducer: Shelf.reduce,
         operations: immutableMapOperations<string, Shelf>(),
-        get: (shop: Shop) => shop.shelves,
-        set: (shop, shelves) => amend(shop, { shelves })
+        get: (shop: Shop) => shop.shelves
     });
 
     export const empty: Shop = {

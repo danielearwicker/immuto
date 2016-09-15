@@ -507,7 +507,7 @@ export interface PropertyDefinition<T extends string, S, P>
 }
 
 // Oh yes, I went there...
-var matchFunction = /function\s*\(\s*([a-z]+)\s*\)\s*\{\s*return\s+([a-z]+)\.([a-z]+)/i
+var matchFunction = /function\s*[a-z]*\s*\(\s*([a-z]+)\s*\)\s*\{\s*return\s+([a-z]+)\.([a-z]+)/i;
 var matchLambda = /\(?\s*([a-z]+)\s*\)?\s*\=\>\s*([a-z]+)\.([a-z]+)/i
 
 function ensureReducer<S, P>(
@@ -521,6 +521,8 @@ function ensureReducer<S, P>(
     // We might be able to generate reduce by parsing the source of fetch!
     const src = fetch.toString();
 
+    matchFunction.lastIndex = 0;
+    matchLambda.lastIndex = 0;
     const matched = matchFunction.exec(src) || matchLambda.exec(src)
     if (!matched) {
         throw new Error(`Cannot generate reducer for ${context} `
