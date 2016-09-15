@@ -292,7 +292,7 @@ export interface CollectionOperations<C, K, I> {
     remove: (state: C, key: K) => C;
 }
 
-export function immutableMap<K, I>(): CollectionOperations<Map<K, I>, K, I> {
+export function immutableMapOperations<K, I>(): CollectionOperations<Map<K, I>, K, I> {
     return {
         get(items, key) {
             return { exists: items.has(key), state: items.get(key) };
@@ -308,7 +308,7 @@ export function immutableMap<K, I>(): CollectionOperations<Map<K, I>, K, I> {
     };
 }
 
-export function objectUsingString<I>(): CollectionOperations<{ [name: string]: I }, string, I> {
+export function stringMapOperations<I>(): CollectionOperations<{ [name: string]: I }, string, I> {
     return {
         get(items, key) {
             return {
@@ -329,7 +329,7 @@ export function objectUsingString<I>(): CollectionOperations<{ [name: string]: I
     };
 }
 
-export function objectUsingNumber<I>(): CollectionOperations<{ [id: number]: I }, number, I> {
+export function numberMapOperations<I>(): CollectionOperations<{ [id: number]: I }, number, I> {
     return {
         get(items, key) {
             return {
