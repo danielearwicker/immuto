@@ -3,12 +3,20 @@
 # immuto
 Very strongly typed Redux adaptation for TypeScript
 
-[Read the in-depth tutorial and explanation.](http://danielearwicker.github.io/Immuto_Strongly_Typed_Redux_Composition.html)
-
-Or just install it with:
+# Install 
 
     npm install immuto
 
-And figure it out from the tests!
+And then 
 
-Developed in http://alm.tools. :rose:
+    import * as I from "immuto"
+
+# Docs 
+
+[Read the in-depth tutorial and explanation.](http://danielearwicker.github.io/Immuto_Strongly_Typed_Redux_Composition.html)
+
+Or just install and read the highly documented tests : https://github.com/danielearwicker/immuto/tree/master/spec !
+
+# Contributing
+
+* Developed in http://alm.tools. :rose:
