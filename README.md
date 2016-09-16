@@ -18,6 +18,10 @@ And then
  
 Or just install and read the highly documented tests : https://github.com/danielearwicker/immuto/tree/master/spec !
 
+# Related
+* [immuto-react](https://github.com/danielearwicker/immuto-react)
+* [immuto-example](https://github.com/danielearwicker/immuto-example)
+
 # Contributing
 
 * `npm install`
