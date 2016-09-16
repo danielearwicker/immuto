@@ -19,4 +19,9 @@ Or just install and read the highly documented tests : https://github.com/daniel
 
 # Contributing
 
-* Developed in http://alm.tools. :rose:
+* `npm install`
+* Open `index.ts` in VSCode (or your favorite TypeScript supporting IDE) and start cracking. 
+* `prepublish` is wired to compile the code using TypeScript latest (see our devDependency)
+* `npm run test` makes sure nothing aweful happens.
+
+> Originally developed in http://alm.tools. :rose:
