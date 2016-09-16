@@ -13,8 +13,9 @@ And then
 
 # Docs 
 
-[Read the in-depth tutorial and explanation.](http://danielearwicker.github.io/Immuto_Strongly_Typed_Redux_Composition.html)
-
+* [Deep background walkthrough](http://danielearwicker.github.io/Immuto_Strongly_Typed_Redux_Composition.html)
+* [Example of React binding](http://danielearwicker.github.io/Immuto_Working_with_React_An_Example_.html)
+ 
 Or just install and read the highly documented tests : https://github.com/danielearwicker/immuto/tree/master/spec !
 
 # Contributing
