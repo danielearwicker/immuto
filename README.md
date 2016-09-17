@@ -13,10 +13,20 @@ And then
 
 # Docs 
 
-[Read the in-depth tutorial and explanation.](http://danielearwicker.github.io/Immuto_Strongly_Typed_Redux_Composition.html)
-
+* [Deep background walkthrough](http://danielearwicker.github.io/Immuto_Strongly_Typed_Redux_Composition.html)
+* [Example of React binding](http://danielearwicker.github.io/Immuto_Working_with_React_An_Example_.html)
+ 
 Or just install and read the highly documented tests : https://github.com/danielearwicker/immuto/tree/master/spec !
+
+# Related
+* [immuto-react](https://github.com/danielearwicker/immuto-react)
+* [immuto-example](https://github.com/danielearwicker/immuto-example)
 
 # Contributing
 
-* Developed in http://alm.tools. :rose:
+* `npm install`
+* Open `index.ts` in VSCode (or your favorite TypeScript supporting IDE) and start cracking. 
+* `prepublish` is wired to compile the code using TypeScript latest (see our devDependency)
+* `npm run test` makes sure nothing awful happens.
+
+> Originally developed in http://alm.tools. :rose:
