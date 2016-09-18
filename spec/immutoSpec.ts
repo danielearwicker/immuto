@@ -1,6 +1,6 @@
 import { List, Map } from "immutable";
 
-import { snapshot, amend, Store } from "../index";
+import { snapshot, amend, Store, replace } from "../index";
 
 import { Book } from "./book";
 import { Shelf } from "./shelf";
@@ -147,7 +147,7 @@ describe("I", () => {
         const store = logStore(Book.reduce.store());
 
         const title1 = Book.title(snapshot(store));
-        title1("Star Warts");
+        title1(replace("Star Warts"));
         expect(store.getState().title).toEqual("Star Warts");
 
         expect(Book.empty.title).toEqual("");
