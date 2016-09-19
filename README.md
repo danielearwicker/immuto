@@ -15,6 +15,7 @@ And then
 
 # Docs
 
+* [Proper documentation](https://danielearwicker.github.io/immuto/) is gradually appearing...
 * [Deep background walkthrough](http://danielearwicker.github.io/Immuto_Strongly_Typed_Redux_Composition.html)
 * [Example of React binding](http://danielearwicker.github.io/Immuto_Working_with_React_An_Example_.html)
 
