@@ -61,6 +61,8 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
+    <link rel="next" href="../how_it_works/" />
+    
     
     <link rel="prev" href="making_the_ui.html" />
     
@@ -104,9 +106,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2" data-path="getting_started.html">
+        <li class="chapter " data-level="1.2" data-path="./">
             
-                <a href="getting_started.html">
+                <a href="./">
             
                     
                     Getting Started
@@ -175,6 +177,38 @@
             
         </li>
     
+        <li class="chapter " data-level="1.3" data-path="../how_it_works/">
+            
+                <a href="../how_it_works/">
+            
+                    
+                    How It Works
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="../how_it_works/how_textinput_works.html">
+            
+                <a href="../how_it_works/how_textinput_works.html">
+            
+                    
+                    How TextInput works
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
 
     
 
@@ -220,7 +254,7 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="what-just-happened">What just happened?</h1><p>Immutable data is hard to modify (by design). We are forced to clone the whole data structure just to change one tiny piece. What we need is that one weird trick <em>(doctors hate her!)</em> known as a cursor.</p><p>A <strong>cursor</strong> represents a single location in the data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it.</p><p>Immuto generalises this idea and says that cursors must be sent actions (because Immuto <em>is</em> Redux, and in Redux actions are the only way to change anything).</p><p>A <strong>property</strong> is a really simple example of a cursor, supporting a single <a href="../GLOSSARY.html#action" class="glossary-term" title="A plain object of the form { type: string, payload: T }. An action tells a reducer how to change data, and is the only way to change the data in the store.">action</a> type, <code>&quot;REPLACE&quot;</code>, that lets you assign a new value. So it mimics a traditional cursor.</p><p>The <code>binding</code> prop of <code>TextInput</code> needs a cursor to a string, and <code>Person.firstName</code> makes exactly that. All it needs is a cursor to a <code>Person</code>. How do we get a cursor to a person? Well, in this case we used <code>bindToStore</code>, because our whole store is a <code>Person</code>.</p><p>It&apos;s good idea to only use properties for really simple individual values: strings, numbers, booleans, that can vary independently.</p><p>If you find yourself storing your whole life story in a single property, that might need a rethink. You&apos;ll probably prefer to enforce rules about how its various parts can be modified, to keep it consistent. Immuto is all about structuring stuff, so we&apos;ll get on to some ways of doing that.</p>
+                                <h1 id="what-just-happened">What just happened?</h1><p>We just achieved declarative two-way binding with Redux. No imperative code was required, just pure declarations. How is this possible?</p><p>Immutable data is intentionally hard to modify. We are forced to clone the whole data structure just to change one tiny piece. What we need is that one weird trick <em>(doctors hate her!)</em> known as a <a href="../GLOSSARY.html#cursor" class="glossary-term" title="In most libraries, a cursor represents a single location in your data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it, so it makes it easy to perform &quot;non-destructive mutation&quot; on large or complex immutable data structures.">cursor</a>.</p><p>A <strong><a href="../GLOSSARY.html#cursor" class="glossary-term" title="In most libraries, a cursor represents a single location in your data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it, so it makes it easy to perform &quot;non-destructive mutation&quot; on large or complex immutable data structures.">cursor</a></strong> represents a single location in the data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it.</p><p>Immuto generalises this idea and says that cursors must be sent actions (because Immuto <em>is</em> Redux, and in Redux actions are the only way to change anything).</p><p>A <strong>property</strong> is a really simple example of a <a href="../GLOSSARY.html#cursor" class="glossary-term" title="In most libraries, a cursor represents a single location in your data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it, so it makes it easy to perform &quot;non-destructive mutation&quot; on large or complex immutable data structures.">cursor</a>, supporting a single <a href="../GLOSSARY.html#action" class="glossary-term" title="A plain object of the form { type: string, payload: T }. An action tells a reducer how to change data, and is in fact the only way to change the data in the store.">action</a> type, <code>&quot;REPLACE&quot;</code>, that lets you assign a new value. So it mimics a traditional <a href="../GLOSSARY.html#cursor" class="glossary-term" title="In most libraries, a cursor represents a single location in your data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it, so it makes it easy to perform &quot;non-destructive mutation&quot; on large or complex immutable data structures.">cursor</a>.</p><p>The <code>binding</code> prop of <code>TextInput</code> needs a <a href="../GLOSSARY.html#cursor" class="glossary-term" title="In most libraries, a cursor represents a single location in your data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it, so it makes it easy to perform &quot;non-destructive mutation&quot; on large or complex immutable data structures.">cursor</a> to a string, and <code>Person.firstName</code> makes exactly that. All it needs is a <a href="../GLOSSARY.html#cursor" class="glossary-term" title="In most libraries, a cursor represents a single location in your data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it, so it makes it easy to perform &quot;non-destructive mutation&quot; on large or complex immutable data structures.">cursor</a> to a <code>Person</code>. How do we get a <a href="../GLOSSARY.html#cursor" class="glossary-term" title="In most libraries, a cursor represents a single location in your data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it, so it makes it easy to perform &quot;non-destructive mutation&quot; on large or complex immutable data structures.">cursor</a> to a person? Well, in this case we used <code>bindToStore</code>, because our whole store is a <code>Person</code>.</p><p>It&apos;s good idea to only use properties for really simple individual values: strings, numbers, booleans, that can vary independently.</p><p>If you find yourself storing your whole life story in a single property, that might need a rethink. You&apos;ll probably prefer to enforce rules about how its various parts can be modified, to keep it consistent. Immuto is all about structuring stuff, so we&apos;ll get on to some ways of doing that.</p>
                                 
                                 </section>
                             
@@ -253,7 +287,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"4. What just happened?","level":"1.2.4","depth":2,"previous":{"title":"3. Making the UI","level":"1.2.3","depth":2,"path":"getting_started/making_the_ui.md","ref":"getting_started/making_the_ui.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/what_just_happened.md","mtime":"2016-09-19T13:36:07.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-19T20:16:31.998Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"4. What just happened?","level":"1.2.4","depth":2,"next":{"title":"How It Works","level":"1.3","depth":1,"path":"how_it_works/README.md","ref":"how_it_works/README.md","articles":[{"title":"How TextInput works","level":"1.3.1","depth":2,"path":"how_it_works/how_textinput_works.md","ref":"how_it_works/how_textinput_works.md","articles":[]}]},"previous":{"title":"3. Making the UI","level":"1.2.3","depth":2,"path":"getting_started/making_the_ui.md","ref":"getting_started/making_the_ui.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/what_just_happened.md","mtime":"2016-09-19T21:51:08.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-19T22:32:44.208Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>

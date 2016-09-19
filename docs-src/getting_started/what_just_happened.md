@@ -1,6 +1,8 @@
 # What just happened?
 
-Immutable data is hard to modify (by design). We are forced to clone the whole data structure just to change one tiny piece. What we need is that one weird trick *(doctors hate her!)* known as a cursor.
+We just achieved declarative two-way binding with Redux. No imperative code was required, just pure declarations. How is this possible?
+
+Immutable data is intentionally hard to modify. We are forced to clone the whole data structure just to change one tiny piece. What we need is that one weird trick *(doctors hate her!)* known as a cursor.
 
 A **cursor** represents a single location in the data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it.
 

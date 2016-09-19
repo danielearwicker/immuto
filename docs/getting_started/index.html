@@ -2,7 +2,7 @@
 <!DOCTYPE HTML>
 <html lang="" >
     <head>
-        <title>1. Creating the project · GitBook</title>
+        <title>Getting Started · GitBook</title>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -61,10 +61,10 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="our_first_data_model.html" />
+    <link rel="next" href="creating_the_project.html" />
     
     
-    <link rel="prev" href="./" />
+    <link rel="prev" href="../" />
     
 
     </head>
@@ -106,7 +106,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2" data-path="./">
+        <li class="chapter active" data-level="1.2" data-path="./">
             
                 <a href="./">
             
@@ -120,7 +120,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter active" data-level="1.2.1" data-path="creating_the_project.html">
+        <li class="chapter " data-level="1.2.1" data-path="creating_the_project.html">
             
                 <a href="creating_the_project.html">
             
@@ -239,7 +239,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href=".." >1. Creating the project</a>
+        <a href=".." >Getting Started</a>
     </h1>
 </div>
 
@@ -254,24 +254,7 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="creating-the-project">Creating the project</h1><p>This is the same type of stuff as any modern web app project, and in fact is similar to <a href="https://www.typescriptlang.org/docs/handbook/react-&amp;-webpack.html" target="_blank">the TypeScript guidelines for React and webpack</a>.</p><p>First install <a href="https://nodejs.org/en/" target="_blank">nodejs</a>, then make sure you have TypeScript and webpack installed:</p><pre><code class="lang-bash">$ npm install -g typescript@rc webpack</code></pre>
-<p>Note we&apos;re using the release candidate, because Immuto requires TypeScript 2.0 which hasn&apos;t gone mainstream just yet.</p><p>Now create your project directory:</p><pre><code class="lang-bash">$ mkdir myapp
-$ <span class="hljs-built_in">cd</span> myapp
-$ npm init</code></pre>
-<p>And accept all the defaults. Then add the packages that we need for the app to run:</p><pre><code class="lang-bash">$ npm install --save react react-dom immuto immuto-react</code></pre>
-<p>And then the packages we&apos;ll need to develop the app:</p><pre><code class="lang-bash">$ npm install --save-dev @types/react @types/react-dom typescript@rc webpack ts-loader <span class="hljs-built_in">source</span>-map-loader</code></pre>
-<p>Run this command to get a minimal React project in place:</p><pre><code class="lang-bash">$ node node_modules/immuto-react/templates/get</code></pre>
-<p>This creates:</p><ul><li><code>tsconfig.json</code> - strictest TypeScript rules
-</li>
-<li><code>index.tsx</code> - entry point for app
-</li>
-<li><code>webpack.config.js</code> - builds <code>index.tsx</code> to <code>built/bundle.js</code> with source maps 
-</li>
-<li><code>index.html</code> - minimal container page, loads <code>built/bundle.js</code>
-</li></ul>
-<p>You can now build the app with:</p><pre><code class="lang-bash">$ webpack</code></pre>
-<p>You can keep webpack running all the time by adding the <code>-w</code> switch, so it rebuilds every time you save a modification.</p><p>If you open <code>index.html</code> in your browser you should see the message:</p><pre><code>Hello, world!</code></pre>
-<p>Now our aim is to improve on that...</p>
+                                <h1 id="getting-started">Getting Started</h1><p>Let&apos;s start by building a very simple but complete working application. It will display a person&apos;s details, and let you edit them.</p><p>Not very impressive, but we&apos;ll build from there.</p>
                                 
                                 </section>
                             
@@ -304,7 +287,7 @@ $ npm init</code></pre>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"1. Creating the project","level":"1.2.1","depth":2,"next":{"title":"2. Our first data model","level":"1.2.2","depth":2,"path":"getting_started/our_first_data_model.md","ref":"getting_started/our_first_data_model.md","articles":[]},"previous":{"title":"Getting Started","level":"1.2","depth":1,"path":"getting_started/README.md","ref":"getting_started/README.md","articles":[{"title":"1. Creating the project","level":"1.2.1","depth":2,"path":"getting_started/creating_the_project.md","ref":"getting_started/creating_the_project.md","articles":[]},{"title":"2. Our first data model","level":"1.2.2","depth":2,"path":"getting_started/our_first_data_model.md","ref":"getting_started/our_first_data_model.md","articles":[]},{"title":"3. Making the UI","level":"1.2.3","depth":2,"path":"getting_started/making_the_ui.md","ref":"getting_started/making_the_ui.md","articles":[]},{"title":"4. What just happened?","level":"1.2.4","depth":2,"path":"getting_started/what_just_happened.md","ref":"getting_started/what_just_happened.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/creating_the_project.md","mtime":"2016-09-19T07:43:50.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-19T22:32:44.208Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Getting Started","level":"1.2","depth":1,"next":{"title":"1. Creating the project","level":"1.2.1","depth":2,"path":"getting_started/creating_the_project.md","ref":"getting_started/creating_the_project.md","articles":[]},"previous":{"title":"Introduction","level":"1.1","depth":1,"path":"README.md","ref":"README.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/README.md","mtime":"2016-09-19T07:43:50.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-19T22:32:44.208Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
