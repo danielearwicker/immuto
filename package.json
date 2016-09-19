@@ -6,7 +6,8 @@
   "typings": "built/index.d.ts",
   "scripts": {
     "test": "jasmine",
-    "prepublish": "tsc"
+    "prepublish": "tsc",
+    "docs": "gitbook build docs-src docs"
   },
   "repository": {
     "type": "git",
