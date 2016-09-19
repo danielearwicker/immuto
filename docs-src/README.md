@@ -36,4 +36,4 @@ The challenge with Redux is composition. In a large application, how do you brea
 
 Immuto solves this problem, and does so with absolute static type-safety. Read on to find out how...
 
-*The name "Immuto" is a joke. It sounds like a magic spell to make your app immutable. But really it's the Latin verb "to change". Which is what this package is really about: changing things without changing them.*
+The name *Immuto* sounds like a magic spell to make your app immutable. But really it's the Latin verb *to change*. Which is what this package is really about: changing things without changing them.
