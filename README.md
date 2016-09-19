@@ -22,7 +22,7 @@ Or just install and read the highly documented tests : https://github.com/daniel
 
 # Related
 * [immuto-react](https://github.com/danielearwicker/immuto-react)
-* [immuto-example](https://github.com/danielearwicker/immuto-example)
+* [immuto-example](https://github.com/danielearwicker/immuto-example) (with live demo!)
 
 # Contributing
 
