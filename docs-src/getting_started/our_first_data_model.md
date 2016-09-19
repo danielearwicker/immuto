@@ -3,7 +3,7 @@
 We're using Immuto because we want all our data to be immutable. For a really simple example we'll go with:
 
 ```ts
-interface Person {
+export interface Person {
     readonly firstName: string;
     readonly lastName: string;
     readonly trusted: boolean;
@@ -21,7 +21,7 @@ import { property, reducer } from "immuto";
 Then at the bottom continue with:
 
 ```ts
-namespace Person {
+export namespace Person {
 
     export const empty: Person = {
         firstName: "",

@@ -2,7 +2,7 @@
 <!DOCTYPE HTML>
 <html lang="" >
     <head>
-        <title>Making the UI · GitBook</title>
+        <title>3. Making the UI · GitBook</title>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -125,7 +125,7 @@
                 <a href="creating_the_project.html">
             
                     
-                    Creating the project
+                    1. Creating the project
             
                 </a>
             
@@ -138,7 +138,7 @@
                 <a href="our_first_data_model.html">
             
                     
-                    Our first data model
+                    2. Our first data model
             
                 </a>
             
@@ -151,7 +151,7 @@
                 <a href="making_the_ui.html">
             
                     
-                    Making the UI
+                    3. Making the UI
             
                 </a>
             
@@ -164,7 +164,7 @@
                 <a href="what_just_happened.html">
             
                     
-                    What just happened?
+                    4. What just happened?
             
                 </a>
             
@@ -207,7 +207,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href=".." >Making the UI</a>
+        <a href=".." >3. Making the UI</a>
     </h1>
 </div>
 
@@ -222,7 +222,42 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="making-the-ui">Making the UI</h1><p>Add React component PersonEditor, wire up to page.</p>
+                                <h1 id="making-the-ui">Making the UI</h1><p>Start a new file and call it <code>PersonEditor.tsx</code>, so we can use JSX in our TypeScript. We&apos;ll need to import React of course, and our <code>Person</code> model. We&apos;ll also use a component from <code>immuto-react</code> called <code>TextInput</code>:</p><pre><code class="lang-ts"><span class="hljs-keyword">import</span> * as React from <span class="hljs-string">&quot;react&quot;</span>;
+<span class="hljs-keyword">import</span> { Person } from <span class="hljs-string">&quot;./Person&quot;</span>;
+<span class="hljs-keyword">import</span> { TextInput } from <span class="hljs-string">&quot;immuto-react&quot;</span>;</code></pre>
+<p>In Immuto all the model data is passed in through props, so let&apos;s declare the type of our props in TypeScript. There&apos;s that mysterious <code>Cursor</code> type we declared in the previous step:</p><pre><code class="lang-ts"><span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> PersonEditorProps {
+    binding: Person.Cursor;    
+}</code></pre>
+<p>Now we can declare our stateless component for editing a <code>Person</code>. We use destructuring to get the <code>binding</code> prop into a simple named variable:</p><pre><code class="lang-ts">export const PersonEditor = ({binding}: PersonEditorProps) =&gt; (
+    &lt;div&gt;
+        &lt;div&gt;
+            &lt;label&gt;First name
+                &lt;TextInput binding={Person.firstName(binding)} /&gt;
+            &lt;/label&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+            &lt;label&gt;Last name
+                &lt;TextInput binding={Person.lastName(binding)} /&gt;
+            &lt;/label&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+            {binding.state.firstName} {binding.state.lastName}
+        &lt;/div&gt;
+    &lt;/div&gt;
+);</code></pre>
+<p>Save this. One last thing we need to do is change <code>index.tsx</code>, which currently renders <code>Hello, world!</code>. So open it up and replace the content with:</p><pre><code class="lang-ts"><span class="hljs-keyword">import</span> { bindToStore } from <span class="hljs-string">&quot;immuto-react&quot;</span>;
+<span class="hljs-keyword">import</span> { Person } from <span class="hljs-string">&quot;./Person&quot;</span>;
+<span class="hljs-keyword">import</span> { PersonEditor } from <span class="hljs-string">&quot;./PersonEditor&quot;</span>;</code></pre>
+<p>Under the imports, add the following:</p><pre><code class="lang-ts"><span class="hljs-keyword">const</span> store = Person.reduce.store();
+
+<span class="hljs-keyword">const</span> App = bindToStore(store, root =&gt; &lt;PersonEditor binding={root} /&gt;);</code></pre>
+<p>The first line creates a store to hold the current state of our <code>Person</code>. Behind the scenes it calls the <code>createStore</code> function from Redux, but this way it&apos;s given more strict static typing.</p><p>The second line creates a new component <code>App</code> that requires no props, and which renders <code>PersonEditor</code> using the current content of the store. This means it re-renders whenever the store changes.</p><p>Finally, fix the call to <code>ReactDOM.render</code> so it uses the new <code>App</code> component:</p><pre><code class="lang-ts">ReactDOM.render((
+
+    &lt;App/&gt;
+
+), <span class="hljs-built_in">document</span>.querySelector(<span class="hljs-string">&quot;#root&quot;</span>));</code></pre>
+<p>Save this too. Rebuild everything:</p><pre><code class="lang-bash">$ webpack</code></pre>
+<p>Now open <code>index.html</code> in your browser and have fun entering your own name, or that of a celebrity. The possibilities are limited!</p>
                                 
                                 </section>
                             
@@ -255,7 +290,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Making the UI","level":"1.2.3","depth":2,"next":{"title":"What just happened?","level":"1.2.4","depth":2,"path":"getting_started/what_just_happened.md","ref":"getting_started/what_just_happened.md","articles":[]},"previous":{"title":"Our first data model","level":"1.2.2","depth":2,"path":"getting_started/our_first_data_model.md","ref":"getting_started/our_first_data_model.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/making_the_ui.md","mtime":"2016-09-19T07:43:50.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-19T17:30:27.411Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"3. Making the UI","level":"1.2.3","depth":2,"next":{"title":"4. What just happened?","level":"1.2.4","depth":2,"path":"getting_started/what_just_happened.md","ref":"getting_started/what_just_happened.md","articles":[]},"previous":{"title":"2. Our first data model","level":"1.2.2","depth":2,"path":"getting_started/our_first_data_model.md","ref":"getting_started/our_first_data_model.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/making_the_ui.md","mtime":"2016-09-19T19:22:08.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-19T20:13:39.239Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
