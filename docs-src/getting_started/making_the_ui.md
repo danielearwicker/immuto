@@ -40,7 +40,17 @@ export function PersonEditor({binding}: PersonEditorProps) {
 }
 ```
 
-You don't have to use `TextInput` and `CheckBox`. They are just thin wrappers around `<input>` that make binding very succinct - [more about that here](../how_it_works/how_textinput_works.md).
+By the way, you don't have to use `TextInput` and `CheckBox`. They are just thin wrappers around `<input>` that make binding very succinct - [more about that here](../how_it_works/how_textinput_works.md).
+
+`TextInput` requires a `binding` to "talk to". Turns out we can make just what it requires by using the `firstName` property we defined in our model. Note the simple pattern:
+
+`TypeName.propertyName(cursorToObject)`
+
+This is logically similar to getting a property from an object:
+
+`objectInstance.propertyName`
+
+But we're dealing with cursors instead of plain objects and values, and that makes all the difference; it means we can send actions (and so make changes), as well as being able to read immutable values.
 
 Save this. One last thing we need to do is change `index.tsx`, which currently renders `Hello, world!`. So open it up and replace the content with:
 

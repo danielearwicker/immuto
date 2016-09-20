@@ -206,28 +206,51 @@ export interface Cursor<S, A> {
      * the new state.
      */
     (action: A): Cursor<S, A>;
+
+    /**
+     * Piping operator - allows left-to-write composition to navigate
+     * down through a tree of cursors. This variant is for simple
+     * references or properties.
+     */
+    $<S2, A2>(ref: (outer: Cursor<S, A>) => Cursor<S2, A2>): Cursor<S2, A2>;
+
+    /**
+     * Piping operator - allows left-to-write composition to navigate
+     * down through a tree of cursors. This variant is for collections
+     * requiring a key to specify an item.
+     */
+    $<S2, A2, K>(ref: (outer: Cursor<S, A>, key: K) => Cursor<S2, A2>, key: K): Cursor<S2, A2>;
+}
+
+export function cursor<S, A>(state: S, dispatch: (action: A) => Cursor<S, A>): Cursor<S, A> {
+
+    let outer: Cursor<S, A>;
+
+    function navigate<S2, A2>(ref: (outer: Cursor<S, A>) => Cursor<S2, A2>): Cursor<S2, A2>;
+    function navigate<S2, A2, K>(ref: (outer: Cursor<S, A>, key: K) => Cursor<S2, A2>, key: K): Cursor<S2, A2>;
+    function navigate<S2, A2, K>(ref:  
+        ((outer: Cursor<S, A>, key?: K) => Cursor<S2, A2>), key?: K): Cursor<S, A> | Cursor<S2, A2> {
+        return ref(outer, key);
+    }
+
+    outer = assign(dispatch, {
+        $: navigate,
+        state,        
+        valueOf() {
+            return state;
+        }
+    });
+
+    return outer;
 }
 
 /**
  * Takes a snapshot of a Redux-like store, making it into a pure cursor.
  */
-export function snapshot<S, A>(
-    store: Store<S, A>,
-
-): Cursor<S, A> {
-    function dispatch(action: A) {
+export function snapshot<S, A>(store: Store<S, A>): Cursor<S, A> {    
+    return cursor(store.getState(), (action: A) => {
         store.dispatch(action);
         return snapshot(store);
-    }
-
-    const state = store.getState();
-
-    return assign(dispatch, {
-        exists: true,
-        state,
-        valueOf() {
-            return state;
-        }
     });
 }
 
@@ -246,19 +269,8 @@ export function items<OS, OA, K, IS, IA>(
     update: (key: K, action: IA) => OA
 ) {
     return (outer: Cursor<OS, OA>, key: K): Cursor<IS, IA> => {
-        const fetched = fetch(outer.state, key);
-
-        function dispatch(innerAction: IA) {
-            return items(fetch, update)(
-                outer(update(key, innerAction)), key);
-        };
-
-        return assign(dispatch, {
-            state: fetched,
-            valueOf() {
-                return fetched;
-            }
-        });
+        return cursor(fetch(outer.state, key), (innerAction: IA) => 
+            items(fetch, update)(outer(update(key, innerAction)), key));
     };
 }
 

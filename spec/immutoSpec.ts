@@ -155,4 +155,21 @@ describe("I", () => {
         const title2 = Book.title(snapshot(store));
         expect(title2.state).toEqual("Star Warts");
     });
+
+    it("supports $ for piping on cursors", () => {
+
+        const store = logStore(Shop.reduce.store());
+        const shop1 = snapshot(store);
+        
+        const shop2 = shop1(Shop.shelves.add("ADV"));
+
+        const advShelf1 = shop2.$(Shop.shelves, "ADV");
+
+        shop1.$(Shop.shelves, "ADV")
+             .$(Shelf.books, 123)
+             .$(Book.title)
+                (replace("The Tiger Who Came To Tea"));
+
+        expect(JSON.stringify(store.getState())).toEqual(`{"name":"","shelves":{"ADV":{"description":"","books":{"123":{"title":"The Tiger Who Came To Tea","price":0,"authors":[]}}}}}`);
+    });
 });
