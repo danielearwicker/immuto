@@ -1,12 +1,10 @@
-import { List, Map } from "immutable";
-
 import * as I from "../index";
 import { action, property, reducer, amend } from "../index";
 
 export interface Book {
     readonly title: string;
     readonly price: number;
-    readonly authors: List<string>;
+    readonly authors: string[];
 }
 
 export namespace Book {
@@ -20,12 +18,12 @@ export namespace Book {
         (book: Book, price: number) => amend(book, { price }));
 
     export const addAuthor = action("ADD_AUTHOR",
-        (book: Book, author: string) => amend(book, { authors: book.authors.push(author) }));
+        (book: Book, author: string) => amend(book, { authors: book.authors.concat(author) }));
 
     export const empty: Book = {
         title: "",
         price: 0,
-        authors: List<string>()
+        authors: []
     };
 
     export const reduce = reducer<Book>(empty)

@@ -27,6 +27,19 @@ export interface ActionDefinition<S, T extends string, P> {
     readonly stateType: S;
 }
 
+export function definition<S, T extends string, P, F>(
+    type: T,
+    reduce: (state: S, payload: P) => S,
+    func: F
+): F & ActionDefinition<S, T, P> {
+    return assign(func, {
+        type,
+        reduce,
+        payloadType: undefined! as P,
+        stateType: undefined! as S
+    });
+}
+
 /**
  * An ActionCreator is a function that creates actions and can
  * also be registered with a reducer.
@@ -49,12 +62,7 @@ export function action<S, T extends string, P>(
         return { type, payload };
     }
 
-    return assign(create, {
-        type,
-        reduce,
-        payloadType: undefined! as P,
-        stateType: undefined! as S
-    });
+    return definition(type, reduce, create);
 }
 
 export interface MinimalReducer<S, A> {
@@ -142,7 +150,6 @@ function chain<S, RA, HT extends string, HP>(
 
         actionType: undefined! as A,
         cursorType: undefined! as Cursor<S, A>,
-
         empty,
 
         action<T extends string, P>(
@@ -213,28 +220,18 @@ export interface Cursor<S, A> {
      * references or properties.
      */
     $<S2, A2>(ref: (outer: Cursor<S, A>) => Cursor<S2, A2>): Cursor<S2, A2>;
-
-    /**
-     * Piping operator - allows left-to-write composition to navigate
-     * down through a tree of cursors. This variant is for collections
-     * requiring a key to specify an item.
-     */
-    $<S2, A2, K>(ref: (outer: Cursor<S, A>, key: K) => Cursor<S2, A2>, key: K): Cursor<S2, A2>;
 }
 
 export function cursor<S, A>(state: S, dispatch: (action: A) => Cursor<S, A>): Cursor<S, A> {
 
     let outer: Cursor<S, A>;
 
-    function navigate<S2, A2>(ref: (outer: Cursor<S, A>) => Cursor<S2, A2>): Cursor<S2, A2>;
-    function navigate<S2, A2, K>(ref: (outer: Cursor<S, A>, key: K) => Cursor<S2, A2>, key: K): Cursor<S2, A2>;
-    function navigate<S2, A2, K>(ref:  
-        ((outer: Cursor<S, A>, key?: K) => Cursor<S2, A2>), key?: K): Cursor<S, A> | Cursor<S2, A2> {
-        return ref(outer, key);
+    function pipe<S2, A2>(ref: (outer: Cursor<S, A>) => Cursor<S2, A2>): Cursor<S2, A2> {
+        return ref(outer);
     }
 
     outer = assign(dispatch, {
-        $: navigate,
+        $: pipe,
         state,        
         valueOf() {
             return state;
@@ -254,320 +251,28 @@ export function snapshot<S, A>(store: Store<S, A>): Cursor<S, A> {
     });
 }
 
-/**
- * Creates a function capable of making cursors, given an outer
- * cursor (a whole store or large portion of a store) and a key
- * (such as a string or number) that identifies a smaller portion
- * of the store.
- *
- * Internally this consists of a function for fetching the inner
- * state and a function for creating an action to update the outer
- * state.
- */
-export function items<OS, OA, K, IS, IA>(
-    fetch: (outer: OS, key: K) => IS,
-    update: (key: K, action: IA) => OA
-) {
-    return (outer: Cursor<OS, OA>, key: K): Cursor<IS, IA> => {
-        return cursor(fetch(outer.state, key), (innerAction: IA) => 
-            items(fetch, update)(outer(update(key, innerAction)), key));
-    };
-}
-
-/**
- * Creates a function capable of making cursors, given an outer
- * cursor, but no key (a singular version of the items function.)
- */
-export function item<OS, OA, IS, IA>(
-    fetch: (outer: OS) => IS,
-    update: (action: IA) => OA
-) : (outer: Cursor<OS, OA>) => Cursor<IS, IA> {
-
-    const impl = items<OS, OA, void, IS, IA>(fetch, (_, action) => update(action));
-    return (outer: Cursor<OS, OA>) => impl(outer, undefined);
-}
-
-/**
- * The payload format used by collection actions. If remove is true,
- * the action removes the specified key from the collection and the
- * update property is ignored. Otherwise if update is undefined then
- * the specified key is set to the collection's empty value. If it
- * is defined then it is an action that is dispatched to the item
- * at the specified key.
- */
-export interface Update<K, U> {
-    key: K;
-    update?: U;
-    remove?: boolean;
-}
-
-export interface CollectionOperations<C, K, I> {
-    get: (state: C, key: K, emptyItem: I) => I;
-    set: (state: C, key: K, item: I) => C;
-    remove: (state: C, key: K, emptyItem: I) => C;
-}
-
-export function immutableMapOperations<K, I>(): CollectionOperations<Map<K, I>, K, I> {
-    return {
-        get(items, key, emptyItem) {
-            return items.has(key) ? items.get(key) : emptyItem;
-        },
-
-        set(items, key, item) {
-            return items.set(key, item);
-        },
-
-        remove(items, key, emptyItem) {
-            return items.remove(key);
-        }
-    };
-}
-
-const builtInOperations: CollectionOperations<any, any, any> = {    
-    get(items, key, emptyItem) {
-        return Object.prototype.hasOwnProperty.call(items, key) ? items[key] : emptyItem;
-    },
-
-    set(items, key, item) {
-        return amend(items, { [key]: item });
-    },
-
-    remove(items, key) {
-        items = assign({}, items);
-        delete items[key];
-        return items;
-    }
-};
-
-export function stringMapOperations<I>(): CollectionOperations<{ [name: string]: I }, string, I> {
-    return builtInOperations;
-}
-
-export function numberMapOperations<I>(): CollectionOperations<{ [id: number]: I }, number, I> {
-    return builtInOperations;
-}
-
-export function arrayOperations<I>(): CollectionOperations<I[], number, I> {
-    return {    
-        get(items, key, emptyItem) {
-            const r = items[key];
-            return r === undefined ? emptyItem : r;
-        },
-
-        set(items, key, item) {
-            items = items.slice(0);
-            items.splice(key, 1, item);
-            return items;
-        },
-
-        remove(items, key, emptyItem) {
-            items = items.slice(0);
-            items[key] = emptyItem;
-            return items;
-        }
-    };
-}
-
-/**
- * A collection is a reducer that can insert, update and remove items,
- * specified by key. For example, a shop has shelves. So it has a collection
- * "SHELVES", where each has a numeric key. The action's payload is the
- * combination of a key and optionally another action that operates on the
- * shelf specified by the key, so the payload has the type:
- *
- *     { key: number, update?: Shelf.Action }
- *
- * If the key specifies an item not already in the collection, a new item
- * is created using the collection's "empty item" object. If update is
- * undefined then the item specified by key is removed from the collection.
- *
- * An item cursor is a cursor that refers to an item within a collection.
- * For example, Shop.shelfAt(shopCursor, 3) refers to the shelf with key 3.
- * It may not exist yet, in which case the cursor's value will be undefined.
- * Any action of type Shelf.Action can be dispatched through the cursor, and
- * it will automatically be wrapped in a SHELVES action with the right key:
- *
- *     {
- *       type: "BOOKS",
- *       payload: {
- *         key: 3,
- *         update: {
- *           type: "SET_PRICE",
- *           3.99
- *         }
- *       }
- *     }
- *
- * Naturally this wrapping process can be nested to any depth.
- */
-
-export interface CollectionCursor<I, A> extends Cursor<I, A> {
-    remove(): void;
-}
-
-export interface CollectionDefinition<T extends string, S, C, K, I, A>
-    extends ActionDefinition<S, T, Update<K, A>> {
-    (outer: Cursor<S, Action<T, Update<K, A>>>, key: K): CollectionCursor<I, A>;
-    update(key: K, action: A): Action<T, Update<K, A>>;
-    add(key: K): Action<T, Update<K, any>>;
-    remove(key: K): Action<T, Update<K, any>>;
-}
-
-
-
-export interface CollectionOptions<T extends string, S, C, K, I, A> {
-    /** The action type name associated with this collection */
-    type: T,
-    /** The reducer function for the item type in the collection */
-    reducer: MinimalReducer<I, A>,
-    /** A helper object that defines how to update the collection type */
-    operations: CollectionOperations<C, K, I>,
-    /** Specifies how to get the collection from the object that owns it */
-    get: (state: S) => C,
-    /** Updates the owning object with a new version of the collection */
-    set?: (state: S, collection: C) => S
-}
-
-export function collection<T extends string, S, C, K, I, A>(
-    type: T,
-    reducer: MinimalReducer<I, A>,
-    operations: CollectionOperations<C, K, I>,
-    get: (state: S) => C,
-    set?: (state: S, collection: C) => S
-): CollectionDefinition<T, S, C, K, I, A>;
-
-export function collection<T extends string, S, C, K, I, A>(
-    options: CollectionOptions<T, S, C, K, I, A>
-): CollectionDefinition<T, S, C, K, I, A>;
-
-export function collection<T extends string, S, C, K, I, A>(
-    optionsOrType: CollectionOptions<T, S, C, K, I, A> | T,
-    opt_reducer?: MinimalReducer<I, A>,
-    opt_operations?: CollectionOperations<C, K, I>,
-    opt_get?: (state: S) => C,
-    set?: (state: S, collection: C) => S
-): CollectionDefinition<T, S, C, K, I, A> {
-
-    let type: T;
-    let operations: CollectionOperations<C, K, I>;
-    let reducer: MinimalReducer<I, A>;
-    let get: (state: S) => C;
-
-    if (typeof optionsOrType === "string") {
-        type = optionsOrType;
-        operations = opt_operations!;
-        reducer = opt_reducer!;
-        get = opt_get!;
-    } else {
-        type = optionsOrType.type;
-        operations = optionsOrType.operations;
-        reducer = optionsOrType.reducer;
-        get = optionsOrType.get;
-        set = optionsOrType.set;
-    }
-
-    type payload_t = Update<K, A>;
-    type action_t = Action<T, payload_t>;
-
-    function add(key: K): action_t {
-        return { type, payload: { key } };
-    }
-
-    function remove(key: K): action_t {
-        return { type, payload: { key, remove: true } };
-    }
-
-    function update<U>(key: K, update: U): Action<T, Update<K, U>> {
-        return { type, payload: { key, update } };
-    }
-
-    const ensuredSet = ensureReducer(`collection(${type})`, get, set);
-
-    function reduce(state: S, {key, update, remove}: payload_t) {
-
-        const collection = get(state);
-        const value = operations.get(collection, key, reducer.empty);
-
-        return ensuredSet(state, remove
-            ? operations.remove(collection, key, reducer.empty)
-            : operations.set(collection, key, update
-                ? reducer(value, update)
-                : value)
-        );
-    }
-
-    const plainCursors = items(
-        (state: S, key: K) => operations.get(get(state), key, reducer.empty),
-        update
-    );
-
-    const collectionCursors = (outer: Cursor<S, action_t>, key: K) => {
-        const plainCursor = plainCursors(outer, key);
-        return assign(plainCursor, {
-            remove: () => outer(remove(key))
-        });
-    }
-
-    return assign(collectionCursors, {
-        type,
-        reduce,
-        update,
-        add,
-        remove,
-        payloadType: undefined! as Update<K, A>,
-        stateType: undefined! as S
-    });
-}
-
 export interface ReferenceDefinition<T extends string, S, I, A>
     extends ActionDefinition<S, T, A> {
     (outer: Cursor<S, Action<T, A>>): Cursor<I, A>;
-    update(action: A): Action<T, A>;
+    //update(action: A): Action<T, A>;
 }
 
-export interface ReferenceOptions<T extends string, S, I, A> {
-    /** The action type name associated with this reference */
-    type: T,
-    /** The reducer function for the referenced type */
-    reducer: MinimalReducer<I, A>,
-    /** Specifies how to get the item from the object that owns it */
-    get: (state: S) => I,
-    /** Updates the owning object with a new version of the item */
-    set?: (state: S, item: I) => S
+function item<OS, OA, IS, IA>(
+    fetch: (outer: OS) => IS,
+    update: (action: IA) => OA
+) {
+    return (outer: Cursor<OS, OA>): Cursor<IS, IA> => {
+        return cursor(fetch(outer.state), (innerAction: IA) => 
+            item(fetch, update)(outer(update(innerAction))));
+    };
 }
 
 export function reference<T extends string, S, I, A>(
     type: T,
     reducer: MinimalReducer<I, A>,
     get: (state: S) => I,
-    set?: (state: S, item: I) => S
-): ReferenceDefinition<T, S, I, A>;
-
-export function reference<T extends string, S, I, A>(
-    options: ReferenceOptions<T, S, I, A>
-): ReferenceDefinition<T, S, I, A>;
-
-export function reference<T extends string, S, I, A>(
-    optionsOrType: ReferenceOptions<T, S, I, A> | T,
-    opt_reducer?: MinimalReducer<I, A>,
-    opt_get?: (state: S) => I,
     set?: (state: S, item: I) => S
 ): ReferenceDefinition<T, S, I, A> {
-
-    let type: T;
-    let reducer: MinimalReducer<I, A>;
-    let get: (state: S) => I;
-
-    if (typeof optionsOrType === "string") {
-        type = optionsOrType;
-        reducer = opt_reducer!;
-        get = opt_get!;
-    } else {
-        type = optionsOrType.type;
-        reducer = optionsOrType.reducer;
-        get = optionsOrType.get;
-        set = optionsOrType.set;
-    }
 
     const ensuredSet = ensureReducer(`reference(${type})`, get, set);
 
@@ -579,12 +284,76 @@ export function reference<T extends string, S, I, A>(
         return ensuredSet(outerState, reducer(get(outerState), innerAction));        
     }
 
-    return assign(item((state: S) => get(state), update), {
-        type,
-        reduce,
-        update,
-        payloadType: undefined! as A,
-        stateType: undefined! as S
+    return definition(type, reduce, item((state: S) => get(state), update));
+}
+
+export interface At<K, A> {
+    key: K;
+    action: A;
+}
+
+export function collection<C, K, I, A>(
+    itemReducer: MinimalReducer<I, A>,
+    get: (collection: C, key: K) => I | undefined,
+    set: (collection: C, key: K, item: I) => C
+) {
+    function substitute(col: C, key: K): I {
+        const itemOrMissing = get(col, key);
+        return itemOrMissing === undefined ? itemReducer.empty : itemOrMissing;
+    }
+
+    function reduce(col: C, at: At<K, A>) {        
+        return set(col, at.key, itemReducer(substitute(col, at.key), at.action));
+    }
+
+    function update(key: K, action: A): Action<"AT", At<K, A>> {
+        return { type: "AT", payload: { key, action } };
+    }
+
+    function traverser(key: K) {
+
+        return item((col: C) => substitute(col, key), (action: A) => update(key, action));
+    }
+
+    return definition("AT", reduce, assign(traverser, { update }));
+}
+
+export function array<I, A>(itemReducer: MinimalReducer<I, A>) {
+    return collection<I[], number, I, A>(
+        itemReducer,
+        (ar, index) => ar[index],
+        (ar, index, item) => {
+            ar = ar.slice(0);
+            ar[index] = item;
+            return ar;
+        });
+}
+
+export function objectByString<I, A>(itemReducer: MinimalReducer<I, A>) {
+    return collection<{ [key: string]: I }, string, I, A>(
+        itemReducer, (obj, key) => obj[key],
+        (obj, key, item) => amend(obj, { [key]: item }));
+}
+
+export function objectByNumber<I, A>(itemReducer: MinimalReducer<I, A>) {
+    return collection<{ [key: number]: I }, number, I, A>(
+        itemReducer, (obj, key) => obj[key],
+        (obj, key, item) => amend(obj, { [key]: item }));
+}
+
+export function removeFromObjectByString<I>() {
+    return action("REMOVE", (obj: { [key: string]: I }, key: string) => {
+        const clone = assign({}, obj);
+        delete clone[key];
+        return clone;
+    });
+}
+
+export function removeFromObjectByNumber<I>() {
+    return action("REMOVE", (obj: { [key: number]: I }, key: number) => {
+        const clone = assign({}, obj);
+        delete clone[key];
+        return clone;
     });
 }
 

@@ -1,10 +1,8 @@
-import { List, Map } from "immutable";
-
 import { snapshot, amend, Store, replace } from "../index";
 
 import { Book } from "./book";
-import { Shelf } from "./shelf";
-import { Shop } from "./shop";
+import { Shelf, Books } from "./shelf";
+import { Shop, Shelves } from "./shop";
 import { Founder } from "./founder";
 
 const enableLogging = false;
@@ -20,27 +18,27 @@ function logStore<State, Types>(store: Store<State, Types>) {
     return store;
 }
 
-describe("I", () => {
+describe("Immuto", () => {
 
     it("has an initial state available via cursor", () => {
 
         {
             const store = Shop.reduce.store();
 
-            const shop = snapshot(store);
-            const shelf = Shop.shelves(shop, "fiction");
-            const book = Shelf.books(shelf, 109423);
-
+            const shelves = snapshot(store).$(Shop.shelves);
+            const shelf = shelves.$(Shelves.at("fiction"));            
+            const books = shelf.$(Shelf.books);
+            const book = books.$(Books.at(109423));
             book(Book.setTitle("1985"));
 
-            expect(store.getState().shelves.get("fiction").books.get(109423).title).toEqual("1985");
+            expect(store.getState().shelves["fiction"].books[109423].title).toEqual("1985");
         }
 
         const book = snapshot(logStore(Book.reduce.store())).state;
 
         expect(book.title).toEqual("");
         expect(book.price).toEqual(0);
-        expect(book.authors.count()).toEqual(0);
+        expect(book.authors.length).toEqual(0);
 
         expect(JSON.stringify(book)).toEqual(`{"title":"","price":0,"authors":[]}`);
     });
@@ -54,20 +52,18 @@ describe("I", () => {
 
         expect(JSON.stringify(shelf2.state)).toEqual(`{"description":"Romance","books":{}}`);
 
-        const shelf3 = shelf2(Shelf.books.update(1001, Book.setTitle("1985")));
+        const book1 = shelf2.$(Shelf.books).$(Books.at(1001))(Book.setTitle("1985"));
 
-        expect(JSON.stringify(shelf3.state)).toEqual(`{"description":"Romance","books":{"1001":{"title":"1985","price":0,"authors":[]}}}`);
+        expect(JSON.stringify(store.getState())).toEqual(`{"description":"Romance","books":{"1001":{"title":"1985","price":0,"authors":[]}}}`);
 
-        const firstBook1 = Shelf.books(shelf3, 1001);
+        expect(book1.state.title).toEqual("1985");
+        expect(book1.state.price).toEqual(0);
 
-        expect(firstBook1.state.title).toEqual("1985");
-        expect(firstBook1.state.price).toEqual(0);
-
-        const firstBook2 = firstBook1(Book.setPrice(5.99));
+        const book2 = book1(Book.setPrice(5.99));
 
         expect(JSON.stringify(store.getState())).toEqual(`{"description":"Romance","books":{"1001":{"title":"1985","price":5.99,"authors":[]}}}`);
 
-        expect(firstBook2.state.price).toEqual(5.99);
+        expect(book2.state.price).toEqual(5.99);
     });
 
     it("supports references and cursors through them", () => {
@@ -92,22 +88,18 @@ describe("I", () => {
 
         expect(JSON.stringify(shelf1.state)).toEqual(`{"description":"Romance","books":{}}`);
 
-        const shelf2 = shelf1
-            (Shelf.books.update(1001, Book.setTitle("1985")))
-            (Shelf.books.update(1002, Book.setTitle("Indiana Smith")))
-            (Shelf.books.update(1003, Book.setTitle("Gone With The Runs")));;
+        shelf1.$(Shelf.books).$(Books.at(1001))(Book.setTitle("1985"));
 
-        expect(JSON.stringify(shelf2.state)).toEqual(`{"description":"Romance","books":{"1001":{"title":"1985","price":0,"authors":[]},"1002":{"title":"Indiana Smith","price":0,"authors":[]},"1003":{"title":"Gone With The Runs","price":0,"authors":[]}}}`);
+        const books1 = shelf1.$(Shelf.books)
+            (Books.at.update(1001, Book.setTitle("1985")))
+            (Books.at.update(1002, Book.setTitle("Indiana Smith")))
+            (Books.at.update(1003, Book.setTitle("Gone With The Runs")));
 
-        const shelf3 = shelf2(Shelf.books.remove(1002));
+        expect(JSON.stringify(books1.state)).toEqual(`{"1001":{"title":"1985","price":0,"authors":[]},"1002":{"title":"Indiana Smith","price":0,"authors":[]},"1003":{"title":"Gone With The Runs","price":0,"authors":[]}}`);
 
-        expect(JSON.stringify(shelf3.state)).toEqual(`{"description":"Romance","books":{"1001":{"title":"1985","price":0,"authors":[]},"1003":{"title":"Gone With The Runs","price":0,"authors":[]}}}`);
+        const books2 = books1(Books.remove(1002));
 
-        // Alternatively, remove via cursor
-        Shelf.books(shelf3, 1003).remove();
-
-        expect(JSON.stringify(store.getState())).toEqual(`{"description":"Romance","books":{"1001":{"title":"1985","price":0,"authors":[]}}}`);
-
+        expect(JSON.stringify(books2.state)).toEqual(`{"1001":{"title":"1985","price":0,"authors":[]},"1003":{"title":"Gone With The Runs","price":0,"authors":[]}}`);
     });
 
     it("supports nested layers of cursors", () => {
@@ -116,20 +108,18 @@ describe("I", () => {
         const shop1 = snapshot(store);
 
         const shop2 = shop1(Shop.setName("Buy the Book, Inc."));
-        const shop3 = shop2(Shop.shelves.add("ADV"));
+        
 
-        const advShelf1 = Shop.shelves(shop3, "ADV");
+        const advShelf1 = shop2.$(Shop.shelves).$(Shelves.at("ADV"));
         expect(advShelf1.state.description).toEqual("");
 
         const advShelf2 = advShelf1(Shelf.setDescription("Adventure"));
         expect(advShelf2.state.description).toEqual("Adventure");
 
-        const advShelf3 = advShelf2(
-            Shelf.books.update(1002, Book.setTitle("Indiana Smith")));
+        const firstBook1 = advShelf2.$(Shelf.books).$(Books.at(1002))(Book.setTitle("Indiana Smith"));
 
         expect(JSON.stringify(store.getState())).toEqual(`{"name":"Buy the Book, Inc.","shelves":{"ADV":{"description":"Adventure","books":{"1002":{"title":"Indiana Smith","price":0,"authors":[]}}}}}`);
 
-        const firstBook1 = Shelf.books(advShelf3, 1002);
         expect(firstBook1.state.title).toEqual("Indiana Smith");
 
         const firstBook2 = firstBook1(Book.setPrice(4.99));
@@ -139,7 +129,7 @@ describe("I", () => {
 
         expect(firstBook3.state.title).toEqual("Indiana Smith");
         expect(firstBook3.state.price).toEqual(4.99);
-        expect(firstBook3.state.authors.first()).toEqual("Jim Orwell");
+        expect(firstBook3.state.authors[0]).toEqual("Jim Orwell");
     });
 
     it("supports properties with magic reducers (experimental)", () => {
@@ -161,15 +151,15 @@ describe("I", () => {
         const store = logStore(Shop.reduce.store());
         const shop1 = snapshot(store);
         
-        const shop2 = shop1(Shop.shelves.add("ADV"));
-
-        const advShelf1 = shop2.$(Shop.shelves, "ADV");
-
-        shop1.$(Shop.shelves, "ADV")
-             .$(Shelf.books, 123)
-             .$(Book.title)
+        const advShelf1 = shop1
+            .$(Shop.shelves)
+            .$(Shelves.at("ADV"))
+            .$(Shelf.books)
+            .$(Books.at(123))
+            .$(Book.title)
                 (replace("The Tiger Who Came To Tea"));
 
         expect(JSON.stringify(store.getState())).toEqual(`{"name":"","shelves":{"ADV":{"description":"","books":{"123":{"title":"The Tiger Who Came To Tea","price":0,"authors":[]}}}}}`);
     });
 });
+

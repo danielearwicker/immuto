@@ -1,5 +1,3 @@
-import { List, Map } from "immutable";
-
 import * as I from "../index";
 import { action, reducer, reference, amend } from "../index";
 
@@ -15,12 +13,8 @@ export namespace Founder {
     export const setName = action("SET_NAME",
         (shop: Founder, name: string) => amend(shop, { name }));
 
-    export const shop = reference({
-        type: "SHELVES",
-        reducer: Shop.reduce,
-        get: (founder: Founder) => founder.shop,
-        set: (founder, shop) => amend(founder, { shop })
-    });
+    export const shop = reference("SHELVES", Shop.reduce,
+        (founder: Founder) => founder.shop);
 
     export const empty: Founder = {
         name: "",
