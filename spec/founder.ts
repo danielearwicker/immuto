@@ -13,7 +13,7 @@ export namespace Founder {
     export const setName = action("SET_NAME",
         (shop: Founder, name: string) => amend(shop, { name }));
 
-    export const shop = reference("SHELVES", Shop.reduce,
+    export const shop = reference("SHELVES", Shop,
         (founder: Founder) => founder.shop);
 
     export const empty: Founder = {

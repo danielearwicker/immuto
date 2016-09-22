@@ -64,7 +64,11 @@ export function action<S, T extends string, P>(
     return definition(type, reduce, create);
 }
 
-export interface MinimalReducer<S, A> {
+/**
+ * Almost a minimal reducer, except it also knows a good
+ * initial state, known as 'empty'.
+ */
+export interface Reducer<S, A> {
     /**
      * Reduce function
      */
@@ -77,7 +81,7 @@ export interface MinimalReducer<S, A> {
 }
 
 /**
- * A Reducer is a function that takes a state object and an action
+ * A reducer is a function that takes a state object and an action
  * and returns a modified state object. Here it is also equipped
  * with a method called action which allows multiple reducer
  * functions to be declaratively merged together into a single
@@ -88,7 +92,7 @@ export interface MinimalReducer<S, A> {
  * x.action(...) returns a new reducer combination rather than
  * modifying x.
  */
-export interface Reducer<S, A> extends MinimalReducer<S, A> {
+export interface ReducerBuilder<S, A> extends Reducer<S, A> {
 
     /**
      * Reduce function
@@ -108,12 +112,12 @@ export interface Reducer<S, A> extends MinimalReducer<S, A> {
     cursorType: Cursor<S, A>;
 
     /**
-     * Returns an enhanced Reducer capable of reducing
+     * Returns an enhanced ReducerBuilder capable of reducing
      * some additional action type.
      */
     action<T extends string, P>(
         definition: ActionDefinition<S, T, P>
-    ): Reducer<S, A | Action<T, P>>;
+    ): ReducerBuilder<S, A | Action<T, P>>;
 
     /**
      * Creates a Redux store with extra type-safety.
@@ -133,7 +137,7 @@ function chain<S, RA, HT extends string, HP>(
     empty: S,
     head: (state: S, payload: HP) => S,
     rest: (state: S, action: RA) => S
-): Reducer<S, RA | Action<HT, HP>> {
+): ReducerBuilder<S, RA | Action<HT, HP>> {
 
     type A = RA | Action<HT, HP>;
 
@@ -153,7 +157,7 @@ function chain<S, RA, HT extends string, HP>(
 
         action<T extends string, P>(
             def: ActionDefinition<S, T, P>
-        ) : Reducer<S, Action<T, P> | A> {
+        ) : ReducerBuilder<S, Action<T, P> | A> {
             return chain<S, A | RA, T, P>(def.type, empty, def.reduce, reduce);
         },
 
@@ -164,14 +168,14 @@ function chain<S, RA, HT extends string, HP>(
 }
 
 /**
- * Creates a starter object from which a Reducer can be formed by
+ * Creates a starter object from which a ReducerBuilder can be formed by
  * calling the action method.
  */
 export function reducer<S>(empty: S) {
     return {
         action<T extends string, P>(
             def: ActionDefinition<S, T, P>
-        ) : Reducer<S, Action<T, P>> {
+        ) : ReducerBuilder<S, Action<T, P>> {
             return chain<S, never, T, P>(def.type, empty, def.reduce, s => s === undefined ? empty : s);
         }
     };
@@ -266,12 +270,31 @@ function item<OS, OA, IS, IA>(
     };
 }
 
+export interface ReducerProvider<S, A> {
+    reduce: Reducer<S, A>;
+}
+
+export type ReducerOrProvider<S, A> = Reducer<S, A> | ReducerProvider<S, A>;
+
+function isReducerProvider<S, A>(obj: any): obj is ReducerProvider<S, A> {
+    return typeof obj !== "function" &&
+           typeof obj.reduce === "function";
+}
+
+function getReducer<S, A>(reducerOrProvider: ReducerOrProvider<S, A>) {
+    return isReducerProvider(reducerOrProvider) 
+        ? reducerOrProvider.reduce 
+        : reducerOrProvider;
+}
+
 export function reference<T extends string, S, I, A>(
     type: T,
-    reducer: MinimalReducer<I, A>,
+    reducerOrProvider: ReducerOrProvider<I, A>,
     get: (state: S) => I,
     set?: (state: S, item: I) => S
 ): ReferenceDefinition<T, S, I, A> {
+
+    const reducer = getReducer(reducerOrProvider);
 
     const ensuredSet = ensureReducer(`reference(${type})`, get, set);
 
@@ -294,17 +317,19 @@ export interface At<K, A> {
 }
 
 export function collection<C, K, I, A>(
-    itemReducer: MinimalReducer<I, A>,
+    reducerOrProvider: ReducerOrProvider<I, A>,
     get: (collection: C, key: K) => I | undefined,
     set: (collection: C, key: K, item: I) => C
 ) {
+    const reducer = getReducer(reducerOrProvider);
+
     function substitute(col: C, key: K): I {
         const itemOrMissing = get(col, key);
-        return itemOrMissing === undefined ? itemReducer.empty : itemOrMissing;
+        return itemOrMissing === undefined ? reducer.empty : itemOrMissing;
     }
 
     function reduce(col: C, at: At<K, A>) {        
-        return set(col, at.key, itemReducer(substitute(col, at.key), at.action));
+        return set(col, at.key, reducer(substitute(col, at.key), at.action));
     }
 
     function update(key: K, action: A): Action<"AT", At<K, A>> {
@@ -318,7 +343,7 @@ export function collection<C, K, I, A>(
     return definition("AT", reduce, assign(traverser, { update }));
 }
 
-export function array<I, A>(itemReducer: MinimalReducer<I, A>) {
+export function array<I, A>(itemReducer: ReducerOrProvider<I, A>) {
     return collection<I[], number, I, A>(
         itemReducer,
         (ar, index) => ar[index],
@@ -329,13 +354,13 @@ export function array<I, A>(itemReducer: MinimalReducer<I, A>) {
         });
 }
 
-export function objectByString<I, A>(itemReducer: MinimalReducer<I, A>) {
+export function objectByString<I, A>(itemReducer: ReducerOrProvider<I, A>) {
     return collection<{ [key: string]: I }, string, I, A>(
         itemReducer, (obj, key) => obj[key],
         (obj, key, item) => amend(obj, { [key]: item }));
 }
 
-export function objectByNumber<I, A>(itemReducer: MinimalReducer<I, A>) {
+export function objectByNumber<I, A>(itemReducer: ReducerOrProvider<I, A>) {
     return collection<{ [key: number]: I }, number, I, A>(
         itemReducer, (obj, key) => obj[key],
         (obj, key, item) => amend(obj, { [key]: item }));

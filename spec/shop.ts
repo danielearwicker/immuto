@@ -9,7 +9,7 @@ export type Shelves = { [id: string]: Shelf }
 export namespace Shelves {
 
     export const empty: Shelves = {};
-    export const at = objectByString(Shelf.reduce);
+    export const at = objectByString(Shelf);
     export const reduce = reducer(empty).action(at);
 }
 
@@ -23,8 +23,8 @@ export namespace Shop {
     export const setName = action("SET_NAME",
         (shop: Shop, name: string) => amend(shop, { name }));
 
-    export const shelves = reference("SHELVES", 
-        Shelves.reduce, (shop: Shop) => shop.shelves);
+    export const shelves = reference("SHELVES", Shelves, 
+        (shop: Shop) => shop.shelves);
 
     export const empty: Shop = {
         name: "",

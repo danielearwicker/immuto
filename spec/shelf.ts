@@ -8,7 +8,7 @@ export type Books = { [id: number]: Book }
 export namespace Books {
 
     export const empty: Books = {};
-    export const at = objectByNumber(Book.reduce);
+    export const at = objectByNumber(Book);
     export const remove = removeFromObjectByNumber<Book>();
 
     export const reduce = reducer(empty)
@@ -26,7 +26,7 @@ export namespace Shelf {
     export const setDescription = action("SET_DESCRIPTION",
         (shelf: Shelf, description: string) => amend(shelf, { description }));
 
-    export const books = reference("BOOKS", Books.reduce, (shelf: Shelf) => shelf.books);
+    export const books = reference("BOOKS", Books, (shelf: Shelf) => shelf.books);
 
     export const empty: Shelf = {
         description: "",
