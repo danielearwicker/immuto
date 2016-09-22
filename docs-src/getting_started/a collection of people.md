@@ -1,5 +1,7 @@
 # A collection of people
 
+**This now works rather differently - will update ASAP**
+
 Now we're going to deal with a whole room of people at once. Intimidating.
 
 Start a new file `Room.ts` and fill it with:

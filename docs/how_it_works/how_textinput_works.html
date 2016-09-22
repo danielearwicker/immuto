@@ -170,6 +170,19 @@
             
         </li>
     
+        <li class="chapter " data-level="1.2.5" data-path="../getting_started/a collection of people.html">
+            
+                <a href="../getting_started/a collection of people.html">
+            
+                    
+                    5. A collection of people
+            
+                </a>
+            
+
+            
+        </li>
+    
 
             </ul>
             
@@ -180,7 +193,7 @@
                 <a href="./">
             
                     
-                    How It Works
+                    How It All Works
             
                 </a>
             
@@ -260,9 +273,9 @@
     readonly state: S;
     (action: A): Cursor&lt;S, A&gt;;
 }</code></pre>
-<p>So a <a href="../GLOSSARY.html#cursor" class="glossary-term" title="In most libraries, a cursor represents a single location in your data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it, so it makes it easy to perform &quot;non-destructive mutation&quot; on large or complex immutable data structures.">cursor</a> is a function that (a) accepts an <a href="../GLOSSARY.html#action" class="glossary-term" title="A plain object of the form { type: string, payload: T }. An action tells a reducer how to change data, and is in fact the only way to change the data in the store.">action</a> (and returns another <a href="../GLOSSARY.html#cursor" class="glossary-term" title="In most libraries, a cursor represents a single location in your data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it, so it makes it easy to perform &quot;non-destructive mutation&quot; on large or complex immutable data structures.">cursor</a>) and (b) has a <code>state</code> property so you can access the current value. It&apos;s like a terse, immutable version of a Redux store.</p><p>Third, there&apos;s a built-in <a href="../GLOSSARY.html#action" class="glossary-term" title="A plain object of the form { type: string, payload: T }. An action tells a reducer how to change data, and is in fact the only way to change the data in the store.">action</a> creator in Immuto called <code>replace</code>, which builds an <a href="../GLOSSARY.html#action" class="glossary-term" title="A plain object of the form { type: string, payload: T }. An action tells a reducer how to change data, and is in fact the only way to change the data in the store.">action</a> such as:</p><pre><code class="lang-ts">{ <span class="hljs-keyword">type</span>: <span class="hljs-string">&quot;REPLACE&quot;</span>, payload: <span class="hljs-string">&quot;Homer&quot;</span> }</code></pre>
-<p>The intention of a <code>&quot;REPLACE&quot;</code> <a href="../GLOSSARY.html#action" class="glossary-term" title="A plain object of the form { type: string, payload: T }. An action tells a reducer how to change data, and is in fact the only way to change the data in the store.">action</a> is to tell its target to replace the existing value with the one in the <code>payload</code>.</p><p>And last, there&apos;s a type called <code>Property</code>, defined as:</p><pre><code class="lang-ts"><span class="hljs-keyword">export</span> <span class="hljs-keyword">type</span> Property&lt;V&gt; = Cursor&lt;V, Action&lt;<span class="hljs-string">&quot;REPLACE&quot;</span>, V&gt;&gt;;</code></pre>
-<p>So it&apos;s just a <a href="../GLOSSARY.html#cursor" class="glossary-term" title="In most libraries, a cursor represents a single location in your data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it, so it makes it easy to perform &quot;non-destructive mutation&quot; on large or complex immutable data structures.">cursor</a> that only supports <code>&quot;REPLACE&quot;</code> actions, and (as you&apos;d expect) its state is the same type that it receives in the replacement payload.</p><p>So with this knowledge, you may be able to predict how <code>TextInput</code> works. No cheating! Okay, you can look now:</p><pre><code class="lang-ts"><span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> TextInputProps <span class="hljs-keyword">extends</span> StandardTextInputProps {
+<p>So a cursor is a function that (a) accepts an action (and returns another cursor) and (b) has a <code>state</code> property so you can access the current value. It&apos;s like a terse, immutable version of a Redux store.</p><p>Third, there&apos;s a built-in action creator in Immuto called <code>replace</code>, which builds an action such as:</p><pre><code class="lang-ts">{ <span class="hljs-keyword">type</span>: <span class="hljs-string">&quot;REPLACE&quot;</span>, payload: <span class="hljs-string">&quot;Homer&quot;</span> }</code></pre>
+<p>The intention of a <code>&quot;REPLACE&quot;</code> action is to tell its target to replace the existing value with the one in the <code>payload</code>.</p><p>And last, there&apos;s a type called <code>Property</code>, defined as:</p><pre><code class="lang-ts"><span class="hljs-keyword">export</span> <span class="hljs-keyword">type</span> Property&lt;V&gt; = Cursor&lt;V, Action&lt;<span class="hljs-string">&quot;REPLACE&quot;</span>, V&gt;&gt;;</code></pre>
+<p>So it&apos;s just a cursor that only supports <code>&quot;REPLACE&quot;</code> actions, and (as you&apos;d expect) its state is the same type that it receives in the replacement payload.</p><p>So with this knowledge, you may be able to predict how <code>TextInput</code> works. No cheating! Okay, you can look now:</p><pre><code class="lang-ts"><span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> TextInputProps <span class="hljs-keyword">extends</span> StandardTextInputProps {
     binding: Property&lt;<span class="hljs-built_in">string</span>&gt;;
 }
 
@@ -271,7 +284,7 @@
         value={props.binding.state}
         onChange={e =&gt; props.binding(replace(e.currentTarget.value))} /&gt;
 );</code></pre>
-<p>It&apos;s just an <code>&lt;input&gt;</code> element. Any properties besides <code>binding</code> are passed straight through, so you can use it just as you would a plain <code>&lt;input&gt;</code>.</p><p>The key to understanding it is to see how it reads and writes values through the <code>binding</code> prop. To read, it accesses <code>state</code>, which contains the current value of the string. To write, it calls <code>binding</code> as a function, passing it an <a href="../GLOSSARY.html#action" class="glossary-term" title="A plain object of the form { type: string, payload: T }. An action tells a reducer how to change data, and is in fact the only way to change the data in the store.">action</a> built with the <code>replace</code> <a href="../GLOSSARY.html#action" class="glossary-term" title="A plain object of the form { type: string, payload: T }. An action tells a reducer how to change data, and is in fact the only way to change the data in the store.">action</a> builder.</p><p>In Immuto, exactly the same Redux concepts (immutable data updated by actions) are applied at the very small scale of individual values, all the way out to the scale of the entire application.</p>
+<p>It&apos;s just an <code>&lt;input&gt;</code> element. Any properties besides <code>binding</code> are passed straight through, so you can use it just as you would a plain <code>&lt;input&gt;</code>.</p><p>The key to understanding it is to see how it reads and writes values through the <code>binding</code> prop. To read, it accesses <code>state</code>, which contains the current value of the string. To write, it calls <code>binding</code> as a function, passing it an action built with the <code>replace</code> action builder.</p><p>In Immuto, exactly the same Redux concepts (immutable data updated by actions) are applied at the very small scale of individual values, all the way out to the scale of the entire application.</p>
                                 
                                 </section>
                             
@@ -304,7 +317,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"How TextInput works","level":"1.3.1","depth":2,"previous":{"title":"How It Works","level":"1.3","depth":1,"path":"how_it_works/README.md","ref":"how_it_works/README.md","articles":[{"title":"How TextInput works","level":"1.3.1","depth":2,"path":"how_it_works/how_textinput_works.md","ref":"how_it_works/how_textinput_works.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"how_it_works/how_textinput_works.md","mtime":"2016-09-19T21:43:06.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-19T22:32:44.208Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"How TextInput works","level":"1.3.1","depth":2,"previous":{"title":"How It All Works","level":"1.3","depth":1,"path":"how_it_works/README.md","ref":"how_it_works/README.md","articles":[{"title":"How TextInput works","level":"1.3.1","depth":2,"path":"how_it_works/how_textinput_works.md","ref":"how_it_works/how_textinput_works.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"how_it_works/how_textinput_works.md","mtime":"2016-09-19T21:43:06.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-22T12:11:34.202Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>

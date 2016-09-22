@@ -172,6 +172,19 @@
             
         </li>
     
+        <li class="chapter " data-level="1.2.5" data-path="a collection of people.html">
+            
+                <a href="a collection of people.html">
+            
+                    
+                    5. A collection of people
+            
+                </a>
+            
+
+            
+        </li>
+    
 
             </ul>
             
@@ -182,7 +195,7 @@
                 <a href="../how_it_works/">
             
                     
-                    How It Works
+                    How It All Works
             
                 </a>
             
@@ -279,7 +292,7 @@
         &lt;/div&gt;
     );
 }</code></pre>
-<p>You don&apos;t have to use <code>TextInput</code> and <code>CheckBox</code>. They are just thin wrappers around <code>&lt;input&gt;</code> that make binding very succinct - <a href="../how_it_works/how_textinput_works.html">more about that here</a>.</p><p>Save this. One last thing we need to do is change <code>index.tsx</code>, which currently renders <code>Hello, world!</code>. So open it up and replace the content with:</p><pre><code class="lang-ts"><span class="hljs-keyword">import</span> { bindToStore } from <span class="hljs-string">&quot;immuto-react&quot;</span>;
+<p>By the way, you don&apos;t have to use <code>TextInput</code> and <code>CheckBox</code>. They are just thin wrappers around <code>&lt;input&gt;</code> that make binding very succinct - <a href="../how_it_works/how_textinput_works.html">more about that here</a>.</p><p><code>TextInput</code> requires a <code>binding</code> to &quot;talk to&quot;. Turns out we can make just what it requires by using the <code>firstName</code> property we defined in our model. Note the simple pattern:</p><p><code>TypeName.propertyName(cursorToObject)</code></p><p>This is logically similar to getting a property from an object:</p><p><code>objectInstance.propertyName</code></p><p>But we&apos;re dealing with cursors instead of plain objects and values, and that makes all the difference; it means we can send actions (and so make changes), as well as being able to read immutable values.</p><p>Save this. One last thing we need to do is change <code>index.tsx</code>, which currently renders <code>Hello, world!</code>. So open it up and replace the content with:</p><pre><code class="lang-ts"><span class="hljs-keyword">import</span> { bindToStore } from <span class="hljs-string">&quot;immuto-react&quot;</span>;
 <span class="hljs-keyword">import</span> { Person } from <span class="hljs-string">&quot;./Person&quot;</span>;
 <span class="hljs-keyword">import</span> { PersonEditor } from <span class="hljs-string">&quot;./PersonEditor&quot;</span>;</code></pre>
 <p>Under the imports, add the following:</p><pre><code class="lang-ts"><span class="hljs-keyword">const</span> store = Person.reduce.store();
@@ -320,7 +333,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"3. Making the UI","level":"1.2.3","depth":2,"next":{"title":"4. What just happened?","level":"1.2.4","depth":2,"path":"getting_started/what_just_happened.md","ref":"getting_started/what_just_happened.md","articles":[]},"previous":{"title":"2. Our first data model","level":"1.2.2","depth":2,"path":"getting_started/our_first_data_model.md","ref":"getting_started/our_first_data_model.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/making_the_ui.md","mtime":"2016-09-19T22:31:32.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-19T22:32:44.208Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"3. Making the UI","level":"1.2.3","depth":2,"next":{"title":"4. What just happened?","level":"1.2.4","depth":2,"path":"getting_started/what_just_happened.md","ref":"getting_started/what_just_happened.md","articles":[]},"previous":{"title":"2. Our first data model","level":"1.2.2","depth":2,"path":"getting_started/our_first_data_model.md","ref":"getting_started/our_first_data_model.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/making_the_ui.md","mtime":"2016-09-20T08:02:29.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-22T12:11:34.202Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
