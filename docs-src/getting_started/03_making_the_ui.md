@@ -48,13 +48,13 @@ By the way, you don't have to use `TextInput` and `CheckBox`. They are just thin
 cursorToObject.$(TypeName.propertyName)
 ```
 
-This is logically similar to getting a property from an ordinary object:
+On a cursor the `.$(...)` is called the piping operator. This is logically similar to getting a property from an ordinary object:
 
 ```ts
 objectInstance.propertyName
 ```
 
-If you want, you can make it more succinct in the JSX by destructuring the properties first:
+If you're into the whole brevity thing, you can make it more succinct in the JSX by destructuring the properties first:
 
 ```tsx
 const { firstName, lastName, trusted } = Person;

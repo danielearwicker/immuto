@@ -382,24 +382,21 @@ export function removeFromObjectByNumber<I>() {
     });
 }
 
-export const REPLACE = "REPLACE";
-export type REPLACE = typeof REPLACE;
-
-export type Replace<V> = Action<REPLACE, V>;
+export type Replace<V> = Action<"REPLACE", V>;
 
 /**
  * Defines the reducer for a value that can only be assigned a whole new value. 
  * It only supports the action "REPLACE" whose payload is the replacement value.
  */
 export function primitive<V>() {
-    return reducer(undefined! as V).action(action(REPLACE, (s: V, v: V) => v));
+    return reducer(undefined! as V).action(action("REPLACE", (s: V, v: V) => v));
 }
 
 /**
  * Action that replaces a whole value, supported by primitives
  */
 export function replace<T>(value: T): Replace<T> {
-    return { type: REPLACE, payload: value };
+    return { type: "REPLACE", payload: value };
 }
 
 /**

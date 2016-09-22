@@ -61,10 +61,10 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="a collection of people.html" />
+    <link rel="next" href="05_a_collection_of_people.html" />
     
     
-    <link rel="prev" href="making_the_ui.html" />
+    <link rel="prev" href="03_making_the_ui.html" />
     
 
     </head>
@@ -120,9 +120,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.2.1" data-path="creating_the_project.html">
+        <li class="chapter " data-level="1.2.1" data-path="01_creating_the_project.html">
             
-                <a href="creating_the_project.html">
+                <a href="01_creating_the_project.html">
             
                     
                     1. Creating the project
@@ -133,9 +133,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2.2" data-path="our_first_data_model.html">
+        <li class="chapter " data-level="1.2.2" data-path="02_our_first_data_model.html">
             
-                <a href="our_first_data_model.html">
+                <a href="02_our_first_data_model.html">
             
                     
                     2. Our first data model
@@ -146,9 +146,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2.3" data-path="making_the_ui.html">
+        <li class="chapter " data-level="1.2.3" data-path="03_making_the_ui.html">
             
-                <a href="making_the_ui.html">
+                <a href="03_making_the_ui.html">
             
                     
                     3. Making the UI
@@ -159,9 +159,9 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.2.4" data-path="what_just_happened.html">
+        <li class="chapter active" data-level="1.2.4" data-path="04_what_just_happened.html">
             
-                <a href="what_just_happened.html">
+                <a href="04_what_just_happened.html">
             
                     
                     4. What just happened?
@@ -172,12 +172,25 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2.5" data-path="a collection of people.html">
+        <li class="chapter " data-level="1.2.5" data-path="05_a_collection_of_people.html">
             
-                <a href="a collection of people.html">
+                <a href="05_a_collection_of_people.html">
             
                     
                     5. A collection of people
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.6" data-path="06_dispatching_some_people.html">
+            
+                <a href="06_dispatching_some_people.html">
+            
+                    
+                    6. Dispatching some people
             
                 </a>
             
@@ -267,7 +280,7 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="what-just-happened">What just happened?</h1><p>We just achieved declarative two-way binding with Redux. No imperative code was required, just pure declarations. How is this possible?</p><p>Immutable data is intentionally hard to modify. We are forced to clone the whole data structure just to change one tiny piece. What we need is that one weird trick <em>(doctors hate her!)</em> known as a cursor.</p><p>A <strong>cursor</strong> represents a single location in the data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it.</p><p>Immuto generalises this idea and says that cursors must be sent actions (because Immuto <em>is</em> Redux, and in Redux actions are the only way to change anything).</p><p>So because our <code>PersonEditor</code> has a <code>Person.Cursor</code>, it can both access the current state of that <code>Person</code> and also send actions to it.</p><p>A <strong>property</strong> is a really simple example of a cursor, supporting a single action type, <code>&quot;REPLACE&quot;</code>, that lets you assign a new value. So it mimics a traditional cursor.</p><p>The <code>binding</code> prop of <code>TextInput</code> needs a cursor to a string, and <code>Person.firstName</code> makes exactly that. We just had to pass it a cursor to a <code>Person</code>.</p><p>How do we get a cursor to a person? Well, in this case we used <code>bindToStore</code>, because our whole store is a <code>Person</code>. But a cursor can refer to any <code>Person</code> embedded within a complex structure, so <code>PersonEditor</code> doesn&apos;t necessarily have to be at the root of our UI, as we&apos;ll see.</p><p>It&apos;s good idea to only use properties for really simple individual values: strings, numbers, booleans, that can vary independently.</p><p>If you find yourself storing your whole life story in a single property, that might need a rethink. You&apos;ll probably prefer to enforce rules about how its various parts can be modified, to keep it consistent. Immuto is all about structuring stuff, so we&apos;ll get on to some ways of doing that.</p>
+                                <h1 id="what-just-happened">What just happened?</h1><p>We just achieved declarative two-way binding with Redux. No imperative code was required, just pure declarations. How is this possible?</p><p>Immutable data is intentionally hard to modify. We are forced to clone the whole data structure just to change one tiny piece. What we need is that one weird trick <em>(doctors hate her!)</em> known as a cursor.</p><p>A <strong>cursor</strong> represents a single location in the data structure, and when you pass it a new value for that location, it takes care of cloning the rest of the structure around it.</p><p>Immuto generalises this idea and says that cursors must be sent actions (because Immuto <em>is</em> Redux, and in Redux actions are the only way to change anything).</p><p>So because our <code>PersonEditor</code> has a <code>Person.Cursor</code>, it can both access the current state of that <code>Person</code> and also send actions to it.</p><p>A <strong>property</strong> is a really simple example of a cursor, supporting a single action type, <code>&quot;REPLACE&quot;</code>, that lets you assign a new value. So it mimics a traditional cursor.</p><p>The <code>binding</code> prop of <code>TextInput</code> needs a cursor to a string. We have a cursor to a whole <code>Person</code>. We can &quot;pipe&quot; it through <code>Person.firstName</code> to get a cursor to the <code>firstName</code> string of our <code>Person</code>.</p><p>How did we get a cursor to a person? Well, in this case we used <code>bindToStore</code>, because our whole store is a <code>Person</code>. But a cursor can refer to any <code>Person</code> embedded within a complex structure, so <code>PersonEditor</code> doesn&apos;t necessarily have to be at the root of our UI, as we&apos;ll see.</p><p>It&apos;s good idea to only use properties for really simple individual values: strings, numbers, booleans, that can vary independently.</p><p>If you find yourself storing your whole life story in a single property, that might need a rethink. You&apos;ll probably prefer to enforce rules about how its various parts can be modified, to keep it consistent. Immuto is all about structuring stuff, so we&apos;ll get on to some ways of doing that.</p>
                                 
                                 </section>
                             
@@ -300,7 +313,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"4. What just happened?","level":"1.2.4","depth":2,"next":{"title":"5. A collection of people","level":"1.2.5","depth":2,"path":"getting_started/a collection of people.md","ref":"getting_started/a collection of people.md","articles":[]},"previous":{"title":"3. Making the UI","level":"1.2.3","depth":2,"path":"getting_started/making_the_ui.md","ref":"getting_started/making_the_ui.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/what_just_happened.md","mtime":"2016-09-20T07:31:02.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-22T18:28:01.632Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"4. What just happened?","level":"1.2.4","depth":2,"next":{"title":"5. A collection of people","level":"1.2.5","depth":2,"path":"getting_started/05_a_collection_of_people.md","ref":"getting_started/05_a_collection_of_people.md","articles":[]},"previous":{"title":"3. Making the UI","level":"1.2.3","depth":2,"path":"getting_started/03_making_the_ui.md","ref":"getting_started/03_making_the_ui.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/04_what_just_happened.md","mtime":"2016-09-22T21:07:53.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-22T22:15:17.963Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>

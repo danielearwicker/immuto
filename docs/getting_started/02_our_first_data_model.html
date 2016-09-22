@@ -2,7 +2,7 @@
 <!DOCTYPE HTML>
 <html lang="" >
     <head>
-        <title>1. Creating the project · GitBook</title>
+        <title>2. Our first data model · GitBook</title>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -61,10 +61,10 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="our_first_data_model.html" />
+    <link rel="next" href="03_making_the_ui.html" />
     
     
-    <link rel="prev" href="./" />
+    <link rel="prev" href="01_creating_the_project.html" />
     
 
     </head>
@@ -120,9 +120,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter active" data-level="1.2.1" data-path="creating_the_project.html">
+        <li class="chapter " data-level="1.2.1" data-path="01_creating_the_project.html">
             
-                <a href="creating_the_project.html">
+                <a href="01_creating_the_project.html">
             
                     
                     1. Creating the project
@@ -133,9 +133,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2.2" data-path="our_first_data_model.html">
+        <li class="chapter active" data-level="1.2.2" data-path="02_our_first_data_model.html">
             
-                <a href="our_first_data_model.html">
+                <a href="02_our_first_data_model.html">
             
                     
                     2. Our first data model
@@ -146,9 +146,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2.3" data-path="making_the_ui.html">
+        <li class="chapter " data-level="1.2.3" data-path="03_making_the_ui.html">
             
-                <a href="making_the_ui.html">
+                <a href="03_making_the_ui.html">
             
                     
                     3. Making the UI
@@ -159,9 +159,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2.4" data-path="what_just_happened.html">
+        <li class="chapter " data-level="1.2.4" data-path="04_what_just_happened.html">
             
-                <a href="what_just_happened.html">
+                <a href="04_what_just_happened.html">
             
                     
                     4. What just happened?
@@ -172,12 +172,25 @@
             
         </li>
     
-        <li class="chapter " data-level="1.2.5" data-path="a collection of people.html">
+        <li class="chapter " data-level="1.2.5" data-path="05_a_collection_of_people.html">
             
-                <a href="a collection of people.html">
+                <a href="05_a_collection_of_people.html">
             
                     
                     5. A collection of people
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.6" data-path="06_dispatching_some_people.html">
+            
+                <a href="06_dispatching_some_people.html">
+            
+                    
+                    6. Dispatching some people
             
                 </a>
             
@@ -252,7 +265,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href=".." >1. Creating the project</a>
+        <a href=".." >2. Our first data model</a>
     </h1>
 </div>
 
@@ -267,24 +280,32 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="creating-the-project">Creating the project</h1><p>This is the same type of stuff as any modern web app project, and in fact is similar to <a href="https://www.typescriptlang.org/docs/handbook/react-&amp;-webpack.html" target="_blank">the TypeScript guidelines for React and webpack</a>.</p><p>First install <a href="https://nodejs.org/en/" target="_blank">nodejs</a>, then make sure you have TypeScript and webpack installed:</p><pre><code class="lang-bash">$ npm install -g typescript@rc webpack</code></pre>
-<p>Note we&apos;re using the release candidate, because Immuto requires TypeScript 2.0 which hasn&apos;t gone mainstream just yet.</p><p>Now create your project directory:</p><pre><code class="lang-bash">$ mkdir myapp
-$ <span class="hljs-built_in">cd</span> myapp
-$ npm init</code></pre>
-<p>And accept all the defaults. Then add the packages that we need for the app to run:</p><pre><code class="lang-bash">$ npm install --save react react-dom immuto immuto-react</code></pre>
-<p>And then the packages we&apos;ll need to develop the app:</p><pre><code class="lang-bash">$ npm install --save-dev @types/react @types/react-dom typescript@rc webpack ts-loader <span class="hljs-built_in">source</span>-map-loader</code></pre>
-<p>Run this command to get a minimal React project in place:</p><pre><code class="lang-bash">$ node node_modules/immuto-react/templates/get</code></pre>
-<p>This creates:</p><ul><li><code>tsconfig.json</code> - strictest TypeScript rules
-</li>
-<li><code>index.tsx</code> - entry point for app
-</li>
-<li><code>webpack.config.js</code> - builds <code>index.tsx</code> to <code>built/bundle.js</code> with source maps 
-</li>
-<li><code>index.html</code> - minimal container page, loads <code>built/bundle.js</code>
-</li></ul>
-<p>You can now build the app with:</p><pre><code class="lang-bash">$ webpack</code></pre>
-<p>You can keep webpack running all the time by adding the <code>-w</code> switch, so it rebuilds every time you save a modification.</p><p>If you open <code>index.html</code> in your browser you should see the message:</p><pre><code>Hello, world!</code></pre>
-<p>Now our aim is to improve on that...</p>
+                                <h1 id="our-first-data-model">Our first data model</h1><p>We&apos;re using Immuto because we want all our data to be immutable. For a really simple example we&apos;ll go with:</p><pre><code class="lang-ts"><span class="hljs-keyword">export</span> <span class="hljs-keyword">interface</span> Person {
+    readonly firstName: <span class="hljs-built_in">string</span>;
+    readonly lastName: <span class="hljs-built_in">string</span>;
+    readonly trusted: <span class="hljs-built_in">boolean</span>;
+}</code></pre>
+<p>Looks like we have trust issues. But anyway. Save the above into your project directory as <code>Person.ts</code>.</p><p>Now let&apos;s describe this structure to Immuto. At the top of the file add:</p><pre><code class="lang-ts"><span class="hljs-keyword">import</span> { property, reducer } from <span class="hljs-string">&quot;immuto&quot;</span>;</code></pre>
+<p>Then at the bottom continue with:</p><pre><code class="lang-ts"><span class="hljs-keyword">export</span> <span class="hljs-keyword">namespace</span> Person {
+
+    <span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> empty: Person = {
+        firstName: <span class="hljs-string">&quot;&quot;</span>,
+        lastName: <span class="hljs-string">&quot;&quot;</span>,
+        trusted: <span class="hljs-literal">false</span>
+    };
+
+    <span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> firstName = property(<span class="hljs-string">&quot;FIRST_NAME&quot;</span>, (p: Person) =&gt; p.firstName);
+    <span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> lastName = property(<span class="hljs-string">&quot;LAST_NAME&quot;</span>, (p: Person) =&gt; p.lastName);
+    <span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> trusted = property(<span class="hljs-string">&quot;TRUSTED&quot;</span>, (p: Person) =&gt; p.trusted);
+
+    <span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> reduce = reducer(empty)
+        .action(firstName)
+        .action(lastName)
+        .action(trusted);
+
+    <span class="hljs-keyword">export</span> <span class="hljs-keyword">type</span> Cursor = <span class="hljs-keyword">typeof</span> reduce.cursorType;
+}</code></pre>
+<p>We&apos;ve declared an <code>empty</code> Person (not saying they&apos;re emotionally empty.) Then we&apos;ve declared <code>property</code> helpers for each of the properties we want user to be able to independently edit, giving each one a Redux-style all-caps name.</p><p>Then we create the <code>reduce</code> function. This is the crux of the Redux approach, but here Immuto writes the function for us.</p><p>The last part, where we declare a type alias called <code>Cursor</code>, is hard to explain at this point, but we&apos;ll get to it soon.</p>
                                 
                                 </section>
                             
@@ -317,7 +338,7 @@ $ npm init</code></pre>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"1. Creating the project","level":"1.2.1","depth":2,"next":{"title":"2. Our first data model","level":"1.2.2","depth":2,"path":"getting_started/our_first_data_model.md","ref":"getting_started/our_first_data_model.md","articles":[]},"previous":{"title":"Getting Started","level":"1.2","depth":1,"path":"getting_started/README.md","ref":"getting_started/README.md","articles":[{"title":"1. Creating the project","level":"1.2.1","depth":2,"path":"getting_started/creating_the_project.md","ref":"getting_started/creating_the_project.md","articles":[]},{"title":"2. Our first data model","level":"1.2.2","depth":2,"path":"getting_started/our_first_data_model.md","ref":"getting_started/our_first_data_model.md","articles":[]},{"title":"3. Making the UI","level":"1.2.3","depth":2,"path":"getting_started/making_the_ui.md","ref":"getting_started/making_the_ui.md","articles":[]},{"title":"4. What just happened?","level":"1.2.4","depth":2,"path":"getting_started/what_just_happened.md","ref":"getting_started/what_just_happened.md","articles":[]},{"title":"5. A collection of people","level":"1.2.5","depth":2,"path":"getting_started/a collection of people.md","ref":"getting_started/a collection of people.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/creating_the_project.md","mtime":"2016-09-19T07:43:50.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-22T18:28:01.632Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"2. Our first data model","level":"1.2.2","depth":2,"next":{"title":"3. Making the UI","level":"1.2.3","depth":2,"path":"getting_started/03_making_the_ui.md","ref":"getting_started/03_making_the_ui.md","articles":[]},"previous":{"title":"1. Creating the project","level":"1.2.1","depth":2,"path":"getting_started/01_creating_the_project.md","ref":"getting_started/01_creating_the_project.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"getting_started/02_our_first_data_model.md","mtime":"2016-09-22T21:07:46.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-22T22:15:17.963Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>

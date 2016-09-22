@@ -12,9 +12,9 @@ So because our `PersonEditor` has a `Person.Cursor`, it can both access the curr
 
 A **property** is a really simple example of a cursor, supporting a single action type, `"REPLACE"`, that lets you assign a new value. So it mimics a traditional cursor.
 
-The `binding` prop of `TextInput` needs a cursor to a string, and `Person.firstName` makes exactly that. We just had to pass it a cursor to a `Person`.
+The `binding` prop of `TextInput` needs a cursor to a string. We have a cursor to a whole `Person`. We can "pipe" it through `Person.firstName` to get a cursor to the `firstName` string of our `Person`.
 
-How do we get a cursor to a person? Well, in this case we used `bindToStore`, because our whole store is a `Person`. But a cursor can refer to any `Person` embedded within a complex structure, so `PersonEditor` doesn't necessarily have to be at the root of our UI, as we'll see.
+How did we get a cursor to a person? Well, in this case we used `bindToStore`, because our whole store is a `Person`. But a cursor can refer to any `Person` embedded within a complex structure, so `PersonEditor` doesn't necessarily have to be at the root of our UI, as we'll see.
 
 It's good idea to only use properties for really simple individual values: strings, numbers, booleans, that can vary independently.
 
