@@ -44,6 +44,6 @@ export namespace Person {
 
 We've declared an `empty` Person (not saying they're emotionally empty.) Then we've declared `property` helpers for each of the properties we want user to be able to independently edit, giving each one a Redux-style all-caps name.
 
-Then we create `reduce` function. This is the crux of the Redux approach, but here Immuto writes the function for us.
+Then we create the `reduce` function. This is the crux of the Redux approach, but here Immuto writes the function for us.
 
 The last part, where we declare a type alias called `Cursor`, is hard to explain at this point, but we'll get to it soon.

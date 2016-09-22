@@ -12,28 +12,28 @@ In Immuto all the model data is passed in through props, so let's declare the ty
 
 ```ts
 export interface PersonEditorProps {
-    binding: Person.Cursor;    
+    person: Person.Cursor;    
 }
 ```
 
-Now we can declare our stateless component for editing a `Person`. We use destructuring to get the `binding` prop into a simple named variable:
+Now we can declare our stateless component for editing a `Person`. We use destructuring to get the `person` prop into a simple named variable:
 
 ```tsx
-export function PersonEditor({binding}: PersonEditorProps) {
+export function PersonEditor({person}: PersonEditorProps) {
     return (
         <div>
             <fieldset>
                 <legend>Person</legend>
-                <TextInput binding={Person.firstName(binding)}
+                <TextInput binding={person.$(Person.firstName)}
                            placeholder="First name" />
-                <TextInput binding={Person.lastName(binding)}
+                <TextInput binding={person.$(Person.lastName)}
                            placeholder="Last name" />            
-                <label><CheckBox binding={Person.trusted(binding)} /> Trusted</label>
+                <label><CheckBox binding={person.$(Person.trusted)} /> Trusted</label>
             </fieldset>
             <fieldset>
                 <legend>Summary</legend>
-                {binding.state.firstName} {binding.state.lastName}
-                : {binding.state.trusted ? "Trusted" : "Not trusted"}
+                {person.state.firstName} {person.state.lastName}
+                : {person.state.trusted ? "Trusted" : "Not trusted"}
             </fieldset>
         </div>
     );
@@ -42,19 +42,36 @@ export function PersonEditor({binding}: PersonEditorProps) {
 
 By the way, you don't have to use `TextInput` and `CheckBox`. They are just thin wrappers around `<input>` that make binding very succinct - [more about that here](../how_it_works/how_textinput_works.md).
 
-`TextInput` requires a `binding` to "talk to". Turns out we can make just what it requires by using the `firstName` property we defined in our model. Note the simple pattern:
+`TextInput` requires a `binding` to "talk to". Turns out we can make just what it requires by using the `firstName` property we defined in our model. Note the simple pattern for looking up a property inside a cursor.
 
-`TypeName.propertyName(cursorToObject)`
+```ts
+cursorToObject.$(TypeName.propertyName)
+```
 
-This is logically similar to getting a property from an object:
+This is logically similar to getting a property from an ordinary object:
 
-`objectInstance.propertyName`
+```ts
+objectInstance.propertyName
+```
 
-But we're dealing with cursors instead of plain objects and values, and that makes all the difference; it means we can send actions (and so make changes), as well as being able to read immutable values.
+If you want, you can make it more succinct in the JSX by destructuring the properties first:
+
+```tsx
+const { firstName, lastName, trusted } = Person;
+```
+
+Which means you can just say:
+
+```
+<TextInput binding={person.$(firstName)}</TextInput>
+```
+
+Why does it have to work in this special way? Because we're not traversing through simple references between objects. `person` is a cursor, and so is `person.$(Person.firstName)`. This is what gives us the power to make changes to the data, even though it's represented immutably.
 
 Save this. One last thing we need to do is change `index.tsx`, which currently renders `Hello, world!`. So open it up and replace the content with:
 
 ```ts
+import * as React from "react";
 import { bindToStore } from "immuto-react";
 import { Person } from "./Person";
 import { PersonEditor } from "./PersonEditor";
@@ -65,14 +82,14 @@ Under the imports, add the following:
 ```ts
 const store = Person.reduce.store();
 
-const App = bindToStore(store, root => <PersonEditor binding={root} />);
+const App = bindToStore(store, p => <PersonEditor person={p} />);
 ```
 
 The first line creates a store to hold the current state of our `Person`. Behind the scenes it calls the `createStore` function from Redux, but this way it's given more strict static typing.
 
 The second line creates a new component `App` that requires no props, and which renders `PersonEditor` using the current content of the store. This means it re-renders whenever the store changes.
 
-Finally, fix the call to `ReactDOM.render` so it uses the new `App` component:
+Finally, put back the call to `ReactDOM.render` so it uses the new `App` component:
 
 ```ts
 ReactDOM.render(<App/>, document.querySelector("#root"));
