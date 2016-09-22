@@ -1,4 +1,3 @@
-import { Map } from "immutable";
 import { Unsubscribe, createStore } from "redux"
 
 /**
