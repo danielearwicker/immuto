@@ -56,7 +56,7 @@ export function PeopleEditor({people}: PeopleEditorProps) {
 See how we use `People.at`? Again, we're using `people.$(...)` to follow the cursor on to something else. Inside the parentheses we describe the thing we want. Only this time its not a named property, but position in the array, so we pass the position `index`:
 
 ```ts
-people.$(People.at(position))
+people.$(People.at(index))
 ```
 
 To see it working, let's modify `index.tsx`, basically replacing `Person` with `People` throughout:
