@@ -253,7 +253,7 @@ export function snapshot<S, A>(store: Store<S, A>): Cursor<S, A> {
 export interface ReferenceDefinition<T extends string, S, I, A>
     extends ActionDefinition<S, T, A> {
     (outer: Cursor<S, Action<T, A>>): Cursor<I, A>;
-    //update(action: A): Action<T, A>;
+    update(action: A): Action<T, A>;
 }
 
 function item<OS, OA, IS, IA>(
