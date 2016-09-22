@@ -284,7 +284,9 @@ export function reference<T extends string, S, I, A>(
         return ensuredSet(outerState, reducer(get(outerState), innerAction));        
     }
 
-    return definition(type, reduce, item((state: S) => get(state), update));
+    const traverser = item((state: S) => get(state), update);
+
+    return definition(type, reduce, assign(traverser, { update }));
 }
 
 export interface At<K, A> {
@@ -311,7 +313,6 @@ export function collection<C, K, I, A>(
     }
 
     function traverser(key: K) {
-
         return item((col: C) => substitute(col, key), (action: A) => update(key, action));
     }
 
