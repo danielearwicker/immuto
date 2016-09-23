@@ -1,6 +1,6 @@
 # How the amend function works
 
-The `amend` function is a little helper function. It is defined as:
+The `amend` function is defined as:
 
 ```ts
 function amend<O1, O2>(o1: O1, o2: O2) {
