@@ -10,3 +10,8 @@
    * [6. Dispatching some people](getting_started/06_dispatching_some_people.md)
 * [How It All Works](how_it_works/README.md)
    * [How TextInput works](how_it_works/how_textinput_works.md)
+   * [How the Piping Operator works](how_it_works/the_piping_operator.md)
+   * [How cursors work](how_it_works/cursors.md)
+   * [How References work](how_it_works/references.md)
+   * [How properties, references and actions are related](how_properties_reference_actions_related.md)
+   * [How the amend function works](how_it_works/amend.md)

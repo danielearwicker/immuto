@@ -34,6 +34,6 @@ There are other type checking systems for JavaScript, and you may be able to use
 
 The challenge with Redux is composition. In a large application, how do you break it down into small composable pieces? And how do you fit them back together again?
 
-Immuto solves this problem, and does so with absolute static type-safety. Read on to find out how...
+Immuto solves this problem, and does so with absolute static type-safety. [Read on to find out how...](getting_started/README.md)
 
-The name *Immuto* sounds like a magic spell to make your app immutable. But really it's the Latin verb *to change*. Which is what this package is really about: changing things without changing them.
+<sub>The name *Immuto* sounds like a magic spell to make your app immutable. But really it's the Latin verb *to change*. Which is what this package is really about: changing things without changing them.</sub>

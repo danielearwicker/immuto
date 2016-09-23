@@ -147,5 +147,3 @@ $ webpack
 ```
 
 Open `index.html` in your browser and try changing the names of the Simpsons family. It's really awesome.
-
-*To be continued...*

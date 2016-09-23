@@ -19,11 +19,7 @@ export interface Action<T extends string, P> {
  */
 export interface ActionDefinition<S, T extends string, P> {
     readonly type: T;
-
     reduce(state: S, payload: P): S;
-
-    readonly payloadType: P;
-    readonly stateType: S;
 }
 
 export function definition<S, T extends string, P, F>(
@@ -33,9 +29,7 @@ export function definition<S, T extends string, P, F>(
 ): F & ActionDefinition<S, T, P> {
     return assign(func, {
         type,
-        reduce,
-        payloadType: undefined! as P,
-        stateType: undefined! as S
+        reduce
     });
 }
 

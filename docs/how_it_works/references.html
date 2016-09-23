@@ -2,7 +2,7 @@
 <!DOCTYPE HTML>
 <html lang="" >
     <head>
-        <title>How It All Works · GitBook</title>
+        <title>How References work · GitBook</title>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -61,10 +61,10 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="how_textinput_works.html" />
+    <link rel="next" href="../how_properties_reference_actions_related.md" />
     
     
-    <link rel="prev" href="../getting_started/06_dispatching_some_people.html" />
+    <link rel="prev" href="cursors.html" />
     
 
     </head>
@@ -203,7 +203,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.3" data-path="./">
+        <li class="chapter " data-level="1.3" data-path="./">
             
                 <a href="./">
             
@@ -256,7 +256,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.3.4" data-path="references.html">
+        <li class="chapter active" data-level="1.3.4" data-path="references.html">
             
                 <a href="references.html">
             
@@ -330,7 +330,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href=".." >How It All Works</a>
+        <a href=".." >How References work</a>
     </h1>
 </div>
 
@@ -345,7 +345,26 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="how-it-works">How It Works</h1><p>Here we&apos;ll lift the covers and discover how the pieces of Immuto fit together.</p><p>You don&apos;t necessarily need to know this to use Immuto, but it will help you become a &quot;power user&quot; and become able to figure out solutions to problems more easily.</p>
+                                <h1 id="references">References</h1><p>Redux says that to modify your data, you send it actions. Immuto is really some tools to help you structure your data in a hierarchy, and then target actions at the right place. A &quot;parent&quot; object can refer to a &quot;child&quot; object, and sometimes you&apos;ll need a way to send actions to the child, and you don&apos;t want to have to think about how to channel it through the parent. You need a <a href="cursors.html">cursor</a> to the child. A reference is a way of obtaining that cursor.</p><p>To set up a reference, we need to know the type of the child, and where to find an instance of the child given a parent. The resulting reference definition is function that, when given a cursor to the parent, returns a cursor to the child. This makes it ideal for passing to the <a href="the_piping_operator.html">piping operator</a>.</p><pre><code class="lang-ts"><span class="hljs-keyword">interface</span> Human { ... }
+
+<span class="hljs-keyword">namespace</span> Human {
+    <span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> reduce = ...;
+}
+
+<span class="hljs-keyword">interface</span> Pet {
+    owner: Human;
+}
+
+<span class="hljs-keyword">namespace</span> Pet {
+    <span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> owner = reference(<span class="hljs-string">&quot;OWNER&quot;</span>, Human, 
+        (p: Pet) =&gt; p.owner);
+}</code></pre>
+<p>Hey presto. We can call <code>owner</code> as a function, passing it a cursor to a <code>Pet</code>, and we&apos;ll get a cursor to that pet&apos;s <code>Human</code> owner.</p><p>We can then send an action to the <code>Human</code> cursor. Behind the scenes, it will go on a boomarang-style there-and-back-again journey. It is automatically wrapped in a forwarding action and submitted to the <code>Pet</code> cursor. This wrapping/forwarding process continues back through the chain of cursors until it reaches the store. Then the resulting combined action is dispatched to the store, and that means the action passed back down the hierarchy of reducers, being unwrapped along the way, until it reaches the <code>Pet</code>&apos;s reducer where the change is applied.</p><p>As for the declaration itself, there are a few sneaky tricks going on. First, the above <code>owner</code> definition is exactly equivalent to:</p><pre><code class="lang-ts"><span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> owner = reference(<span class="hljs-string">&quot;OWNER&quot;</span>, Human, 
+    (p: Pet) =&gt; p.owner,
+    (p: Pet, owner: Human) =&gt; { amend(p, { owner })});</code></pre>
+<p>The additional function is the &quot;setter&quot;, responsible for storing a new <code>Human</code> in the pet&apos;s <code>owner</code> field. The first function is the &quot;getter&quot;. For simple cases, Immuto can parse the source of the getter and so auto-generate the getter. For more complex ways of finding the referred-to object, you&apos;ll have to write your own setter.</p><p>The <code>Human</code> argument is actually shorthand for <code>Human.reduce</code>, so we could have said:</p><pre><code class="lang-ts"><span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> owner = reference(<span class="hljs-string">&quot;OWNER&quot;</span>, Human.reduce, (p: Pet) =&gt; p.owner,
+    (p: Pet, owner: Human) =&gt; { amend(p, { owner })});</code></pre>
+<p>To use the shorter version, make sure you use the name <code>reduce</code> in the namespaces for your types.</p>
                                 
                                 </section>
                             
@@ -378,7 +397,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"How It All Works","level":"1.3","depth":1,"next":{"title":"How TextInput works","level":"1.3.1","depth":2,"path":"how_it_works/how_textinput_works.md","ref":"how_it_works/how_textinput_works.md","articles":[]},"previous":{"title":"6. Dispatching some people","level":"1.2.6","depth":2,"path":"getting_started/06_dispatching_some_people.md","ref":"getting_started/06_dispatching_some_people.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"how_it_works/README.md","mtime":"2016-09-19T21:35:22.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-23T22:05:43.780Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"How References work","level":"1.3.4","depth":2,"next":{"title":"How properties, references and actions are related","level":"1.3.5","depth":2,"path":"how_properties_reference_actions_related.md","ref":"how_properties_reference_actions_related.md","articles":[]},"previous":{"title":"How cursors work","level":"1.3.3","depth":2,"path":"how_it_works/cursors.md","ref":"how_it_works/cursors.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["theme-api"],"pluginsConfig":{"theme-api":{"languages":[{"lang":"js","name":"JavaScript","default":true}],"split":true,"theme":"light"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"how_it_works/references.md","mtime":"2016-09-23T20:32:48.000Z","type":"markdown"},"gitbook":{"version":"3.2.0","time":"2016-09-23T22:05:43.780Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
