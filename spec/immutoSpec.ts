@@ -1,6 +1,6 @@
 import { snapshot, amend, Store, replace } from "../index";
 
-import { Book } from "./book";
+import { Book, Product, Food } from "./book";
 import { Shelf, Books } from "./shelf";
 import { Shop, Shelves } from "./shop";
 import { Founder } from "./founder";
@@ -40,7 +40,7 @@ describe("Immuto", () => {
         expect(book.price).toEqual(0);
         expect(book.authors.length).toEqual(0);
 
-        expect(JSON.stringify(book)).toEqual(`{"title":"","price":0,"authors":[]}`);
+        expectJson(book, `{"title":"","price":0,"authors":[]}`);
     });
 
     it("can be updated via cursors", () => {
@@ -50,20 +50,27 @@ describe("Immuto", () => {
         const shelf1 = snapshot(store);
         const shelf2 = shelf1(Shelf.setDescription("Romance"));
 
-        expect(JSON.stringify(shelf2.state)).toEqual(`{"description":"Romance","books":{}}`);
+        expectJson(shelf2.state, `{"description":"Romance","books":{}}`);
 
         const book1 = shelf2.$(Shelf.books).$(Books.at(1001))(Book.setTitle("1985"));
 
-        expect(JSON.stringify(store.getState())).toEqual(`{"description":"Romance","books":{"1001":{"title":"1985","price":0,"authors":[]}}}`);
+        expectJson(store.getState(), `{"description":"Romance","books":{"1001":{"title":"1985","price":0,"authors":[]}}}`);
 
         expect(book1.state.title).toEqual("1985");
         expect(book1.state.price).toEqual(0);
 
-        const book2 = book1(Book.setPrice(5.99));
+        const book2 = book1(Product.setPrice(5.99));
 
-        expect(JSON.stringify(store.getState())).toEqual(`{"description":"Romance","books":{"1001":{"title":"1985","price":5.99,"authors":[]}}}`);
+        expectJson(store.getState(), `{"description":"Romance","books":{"1001":{"title":"1985","price":5.99,"authors":[]}}}`);
 
         expect(book2.state.price).toEqual(5.99);
+
+        const book3 = book1(Book.addAuthor("Fred Orwell"));
+
+        expectJson(store.getState(), `{"description":"Romance","books":{"1001":{"title":"1985","price":5.99,"authors":["Fred Orwell"]}}}`);
+
+        expect(book3.state.price).toEqual(5.99);
+        expect(book3.state.authors[0]).toEqual("Fred Orwell");
     });
 
     it("supports references and cursors through them", () => {
@@ -86,7 +93,7 @@ describe("Immuto", () => {
 
         const shelf1 = snapshot(store)(Shelf.setDescription("Romance"));
 
-        expect(JSON.stringify(shelf1.state)).toEqual(`{"description":"Romance","books":{}}`);
+        expectJson(shelf1.state, `{"description":"Romance","books":{}}`);
 
         shelf1.$(Shelf.books).$(Books.at(1001))(Book.setTitle("1985"));
 
@@ -95,11 +102,11 @@ describe("Immuto", () => {
             (Books.at.update(1002, Book.setTitle("Indiana Smith")))
             (Books.at.update(1003, Book.setTitle("Gone With The Runs")));
 
-        expect(JSON.stringify(books1.state)).toEqual(`{"1001":{"title":"1985","price":0,"authors":[]},"1002":{"title":"Indiana Smith","price":0,"authors":[]},"1003":{"title":"Gone With The Runs","price":0,"authors":[]}}`);
+        expectJson(books1.state, `{"1001":{"title":"1985","price":0,"authors":[]},"1002":{"title":"Indiana Smith","price":0,"authors":[]},"1003":{"title":"Gone With The Runs","price":0,"authors":[]}}`);
 
         const books2 = books1(Books.remove(1002));
 
-        expect(JSON.stringify(books2.state)).toEqual(`{"1001":{"title":"1985","price":0,"authors":[]},"1003":{"title":"Gone With The Runs","price":0,"authors":[]}}`);
+        expectJson(books2.state, `{"1001":{"title":"1985","price":0,"authors":[]},"1003":{"title":"Gone With The Runs","price":0,"authors":[]}}`);
     });
 
     it("supports nested layers of cursors", () => {
@@ -118,14 +125,14 @@ describe("Immuto", () => {
 
         const firstBook1 = advShelf2.$(Shelf.books).$(Books.at(1002))(Book.setTitle("Indiana Smith"));
 
-        expect(JSON.stringify(store.getState())).toEqual(`{"name":"Buy the Book, Inc.","shelves":{"ADV":{"description":"Adventure","books":{"1002":{"title":"Indiana Smith","price":0,"authors":[]}}}}}`);
+        expectJson(store.getState(), `{"name":"Buy the Book, Inc.","shelves":{"ADV":{"description":"Adventure","books":{"1002":{"title":"Indiana Smith","price":0,"authors":[]}}}}}`);
 
         expect(firstBook1.state.title).toEqual("Indiana Smith");
 
-        const firstBook2 = firstBook1(Book.setPrice(4.99));
+        const firstBook2 = firstBook1(Product.setPrice(4.99));
         const firstBook3 = firstBook2(Book.addAuthor("Jim Orwell"));
 
-        expect(JSON.stringify(store.getState())).toEqual(`{"name":"Buy the Book, Inc.","shelves":{"ADV":{"description":"Adventure","books":{"1002":{"title":"Indiana Smith","price":4.99,"authors":["Jim Orwell"]}}}}}`);
+        expectJson(store.getState(), `{"name":"Buy the Book, Inc.","shelves":{"ADV":{"description":"Adventure","books":{"1002":{"title":"Indiana Smith","price":4.99,"authors":["Jim Orwell"]}}}}}`);
 
         expect(firstBook3.state.title).toEqual("Indiana Smith");
         expect(firstBook3.state.price).toEqual(4.99);
@@ -159,7 +166,66 @@ describe("Immuto", () => {
             .$(Book.title)
                 (replace("The Tiger Who Came To Tea"));
 
-        expect(JSON.stringify(store.getState())).toEqual(`{"name":"","shelves":{"ADV":{"description":"","books":{"123":{"title":"The Tiger Who Came To Tea","price":0,"authors":[]}}}}}`);
+        expectJson(store.getState(), `{"name":"","shelves":{"ADV":{"description":"","books":{"123":{"title":"The Tiger Who Came To Tea","price":0,"authors":[]}}}}}`);
     });
+
+    it("supports sub-typing", () => {
+
+        const store = logStore(Book.reduce.store());
+
+        store.dispatch(Book.setTitle("Fred"));
+
+        const productCursor: Product.Cursor = snapshot(store);
+
+        const p2 = productCursor(Product.setPrice(22));
+
+        expect(p2.state.price).toEqual(22);
+
+        expect(store.getState().title).toEqual("Fred");
+        expect(store.getState().price).toEqual(22);
+    });
+
 });
 
+function toCanonicalJsonStream(obj: any, stream: string[]) {
+    if (obj) {
+        if (Array.isArray(obj)) {
+            stream.push('[');
+            for (var n = 0; n < obj.length; n++) {
+                if (n != 0) {
+                    stream.push(',');
+                }
+                toCanonicalJsonStream(obj[n], stream);
+            }
+            stream.push(']');
+            return;
+        }
+
+        if (typeof obj == 'object') {
+            stream.push('{');
+            var keys = Object.keys(obj);
+            keys.sort();
+            keys.forEach((key, i) => {
+                if (i != 0) {
+                    stream.push(',');
+                }
+                stream.push(JSON.stringify(key));
+                stream.push(':');
+                toCanonicalJsonStream(obj[key], stream);
+            });
+            stream.push('}');
+            return;
+        }
+    }
+    stream.push(JSON.stringify(obj));
+}
+
+export function toCanonicalJson(obj: any) {
+    var parts: string[] = [];
+    toCanonicalJsonStream(obj, parts);
+    return parts.join('');
+}
+
+export function expectJson(obj: any, json: string) {
+    expect(toCanonicalJson(obj)).toEqual(toCanonicalJson(JSON.parse(json)));
+}

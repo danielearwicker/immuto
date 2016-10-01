@@ -117,6 +117,10 @@ export interface ReducerBuilder<S, A> extends Reducer<S, A> {
      * Creates a Redux store with extra type-safety.
      */
     store(): Store<S, A>;
+
+    mixin<S2, A2>(
+        reducer2: Reducer<S2, A2>
+    ): ReducerBuilder<S & S2, A | A2>;
 }
 
 function isAction<T extends string>(
@@ -124,6 +128,63 @@ function isAction<T extends string>(
     type: T
 ): obj is Action<T, any> {
     return obj && obj.type === type;
+}
+
+function mixin<S1, A1, S2, A2>(
+    reducer1: Reducer<S1, A1>,
+    reducer2: Reducer<S2, A2>
+): ReducerBuilder<S1 & S2, A1 | A2> {
+
+    const empty = amend(reducer1.empty, reducer2.empty);
+
+    function reduce(state: S1 & S2, action: A1 | A2) {
+        if (state === undefined) {
+            state = empty; 
+        }
+
+        const result2 = reducer2(state, action as A2);
+        if (result2 !== state) {
+            return amend(state, result2);
+        }
+
+        const result1 = reducer1(state, action as A1);        
+        if (result1 !== state) {                
+            return amend(state, result1);
+        }
+
+        return state;
+    }
+
+    return builder(empty, reduce);
+}
+
+export function builder<S, A>(
+    empty: S, 
+    reduce: (state: S, action: A) => S
+): ReducerBuilder<S, A> {
+
+    const result = assign(reduce, {
+
+        actionType: undefined! as A,
+        cursorType: undefined! as Cursor<S, A>,
+        empty,
+
+        action<T extends string, P>(
+            def: ActionDefinition<S, T, P>
+        ) : ReducerBuilder<S, Action<T, P> | A> {
+            return chain<S, A, T, P>(def.type, empty, def.reduce, reduce);
+        },
+
+        store(): Store<S, A> {
+            return createStore(reduce);
+        },
+
+        mixin<S2, A2>(reducer2: Reducer<S2, A2>): ReducerBuilder<S & S2, A | A2> {
+            return mixin(result, reducer2);
+        }
+    });
+
+    return result;
 }
 
 function chain<S, RA, HT extends string, HP>(
@@ -142,23 +203,8 @@ function chain<S, RA, HT extends string, HP>(
 
         return rest(state, action);
     }
-
-    return assign(reduce, {
-
-        actionType: undefined! as A,
-        cursorType: undefined! as Cursor<S, A>,
-        empty,
-
-        action<T extends string, P>(
-            def: ActionDefinition<S, T, P>
-        ) : ReducerBuilder<S, Action<T, P> | A> {
-            return chain<S, A | RA, T, P>(def.type, empty, def.reduce, reduce);
-        },
-
-        store(): Store<S, A> {
-            return createStore(reduce);
-        }
-    });
+    
+    return builder(empty, reduce);
 }
 
 /**
@@ -166,13 +212,7 @@ function chain<S, RA, HT extends string, HP>(
  * calling the action method.
  */
 export function reducer<S>(empty: S) {
-    return {
-        action<T extends string, P>(
-            def: ActionDefinition<S, T, P>
-        ) : ReducerBuilder<S, Action<T, P>> {
-            return chain<S, never, T, P>(def.type, empty, def.reduce, s => s === undefined ? empty : s);
-        }
-    };
+    return builder<S, never>(empty, s => s === undefined ? empty : s);
 }
 
 export interface Subscribable {
@@ -275,7 +315,7 @@ function isReducerProvider<S, A>(obj: any): obj is ReducerProvider<S, A> {
            typeof obj.reduce === "function";
 }
 
-function getReducer<S, A>(reducerOrProvider: ReducerOrProvider<S, A>) {
+export function getReducer<S, A>(reducerOrProvider: ReducerOrProvider<S, A>) {
     return isReducerProvider(reducerOrProvider) 
         ? reducerOrProvider.reduce 
         : reducerOrProvider;
@@ -417,9 +457,14 @@ export function property<T extends string, S, V>(
 export function assign<T, S1, S2>(target: T, source1: S1, source2: S2): T & S1 & S2;
 export function assign<T, S1>(target: T, source1: S1): T & S1;
 export function assign<T>(target: T, ...sources: any[]): any {
+    if (!target) {
+        throw new Error("assign's target must be an object")
+    }
     for (const source of sources) {
-        for (const key of Object.keys(source)) {
-            (target as any)[key] = (source as any)[key];
+        if (source) {
+            for (const key of Object.keys(source)) {
+                (target as any)[key] = (source as any)[key];
+            }
         }
     }
     return target;
