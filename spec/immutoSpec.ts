@@ -18,6 +18,29 @@ function logStore<State, Types>(store: Store<State, Types>) {
     return store;
 }
 
+describe("amend", () => {
+
+    it("works with plain objects", () => {
+
+        const o1 = { x: 5, y: 2 };
+        const o2 = amend(o1, { z: o1.x + o1.y });
+
+        expect(o2.x).toEqual(5);
+        expect(o2.y).toEqual(2);
+        expect(o2.z).toEqual(7);
+    });
+
+    it("works with arrays", () => {
+
+        const o1 = [5, 2];
+        const o2 = amend(o1, { z: o1[0] + o1[1] });
+
+        expect(o2[0]).toEqual(5);
+        expect(o2[1]).toEqual(2);
+        expect(o2.z).toEqual(7);
+    });
+});
+
 describe("Immuto", () => {
 
     it("has an initial state available via cursor", () => {

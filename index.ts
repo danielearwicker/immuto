@@ -479,8 +479,8 @@ export function assign<T>(target: T, ...sources: any[]): any {
  *
  *    amend(book, { title })
  */
-export function amend<O1, O2>(o1: O1, o2: O2) {
-    return assign({}, o1, o2);
+export function amend<O1, O2>(o1: O1, o2: O2) {    
+    return assign(Array.isArray(o1) ? [] : {}, o1, o2);
 }
 
 // Oh yes, I went there...
